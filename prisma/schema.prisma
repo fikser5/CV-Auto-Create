@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Plan {
+  free
+  premium
+}
+
+enum SkillLevel {
+  podstawowy
+  sredni
+  zaawansowany
+  ekspert
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  fullName     String   @map("full_name")
+  phone        String?
+  plan         Plan     @default(free)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  profile      Profile?
+  jobPostings  JobPosting[]
+  generatedCvs GeneratedCv[]
+
+  @@map("users")
+}
+
+model Profile {
+  id          String   @id @default(uuid())
+  userId      String   @unique @map("user_id")
+  headline    String?
+  summary     String?
+  location    String?
+  linkedinUrl String?  @map("linkedin_url")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  experiences Experience[]
+  education   Education[]
+  skills      Skill[]
+  interests   Interest[]
+
+  @@map("profiles")
+}
+
+model Experience {
+  id          String    @id @default(uuid())
+  profileId   String    @map("profile_id")
+  companyName String    @map("company_name")
+  position    String
+  description String?
+  startDate   DateTime  @map("start_date")
+  endDate     DateTime? @map("end_date")
+  orderIndex  Int       @default(0) @map("order_index")
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@map("experiences")
+}
+
+model Education {
+  id         String    @id @default(uuid())
+  profileId  String    @map("profile_id")
+  schoolName String    @map("school_name")
+  degree     String?
+  startDate  DateTime  @map("start_date")
+  endDate    DateTime? @map("end_date")
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@map("education")
+}
+
+model Skill {
+  id        String      @id @default(uuid())
+  profileId String      @map("profile_id")
+  name      String
+  level     SkillLevel?
+  category  String?
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@map("skills")
+}
+
+model Interest {
+  id        String @id @default(uuid())
+  profileId String @map("profile_id")
+  name      String
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@map("interests")
+}
+
+model JobPosting {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  sourceUrl   String?  @map("source_url")
+  rawContent  String   @map("raw_content")
+  companyName String?  @map("company_name")
+  jobTitle    String?  @map("job_title")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  generatedCvs GeneratedCv[]
+
+  @@map("job_postings")
+}
+
+model GeneratedCv {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  jobPostingId  String   @map("job_posting_id")
+  contentJson   Json     @map("content_json")
+  templateId    String   @map("template_id")
+  version       Int      @default(1)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobPosting JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+
+  @@map("generated_cvs")
+}
