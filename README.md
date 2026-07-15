@@ -1,90 +1,36 @@
-# CV-Auto-Create 🎯
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-> AI-powered web app that generates a tailored CV for a specific job posting.
+## Getting Started
 
-CV-Auto-Create to aplikacja webowa, która pozwala użytkownikowi jednorazowo uzupełnić profil zawodowy (doświadczenie, umiejętności, edukację), a następnie automatycznie generować CV **dopasowane do konkretnej oferty pracy** przy użyciu sztucznej inteligencji.
-
-Zamiast ręcznie dostosowywać CV do każdej aplikacji o pracę, użytkownik wkleja treść ogłoszenia — a system priorytetyzuje i przeformułowuje jego prawdziwe doświadczenie tak, by najlepiej odpowiadało wymaganiom danej oferty.
-
-🚧 **Status projektu:** w trakcie budowy (aktywny rozwój, MVP).
-
----
-
-## ✨ Funkcje (MVP)
-
-- 🔐 Rejestracja i logowanie użytkownika
-- 👤 Budowa profilu zawodowego (doświadczenie, edukacja, umiejętności, zainteresowania)
-- 📋 Wklejenie treści oferty pracy
-- 🤖 Generowanie CV dopasowanego do oferty (AI — Claude API)
-- 📄 Eksport gotowego CV do PDF
-
-### Planowane (kolejne fazy)
-- Historia wygenerowanych wersji CV
-- Generator listu motywacyjnego dopasowanego do oferty
-- Wiele szablonów wizualnych
-- Integracja z legalnymi API agregatorów ofert pracy
-- System subskrypcji (Stripe)
-
----
-
-## 🛠️ Stack technologiczny
-
-| Warstwa | Technologia |
-|---|---|
-| Frontend | Next.js (React) + TypeScript |
-| Stylowanie | Tailwind CSS |
-| Backend | Next.js API Routes |
-| Baza danych | PostgreSQL |
-| ORM | Prisma |
-| Autentykacja | NextAuth.js (Auth.js) |
-| AI | Anthropic Claude API |
-| Generowanie PDF | react-pdf / Puppeteer |
-| Hosting | Vercel + Supabase/Neon |
-
----
-
-## 🚀 Uruchomienie lokalne
+First, run the development server:
 
 ```bash
-# Klonowanie repozytorium
-git clone git@github.com:fikser5/CV-Auto-Create.git
-cd CV-Auto-Create
-
-# Instalacja zależności
-npm install
-
-# Konfiguracja zmiennych środowiskowych
-cp .env.example .env.local
-# uzupełnij DATABASE_URL, ANTHROPIC_API_KEY, NEXTAUTH_SECRET itd.
-
-# Migracja bazy danych
-npx prisma migrate dev
-
-# Uruchomienie serwera deweloperskiego
 npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-Aplikacja będzie dostępna pod adresem `http://localhost:3000`.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
----
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-## 📂 Struktura projektu (docelowa)
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-```
-CV-Auto-Create/
-├── src/
-│   ├── app/              # strony i routing (Next.js App Router)
-│   ├── components/       # komponenty React
-│   ├── lib/              # logika biznesowa, integracja z AI
-│   └── types/            # typy TypeScript
-├── prisma/
-│   └── schema.prisma     # schemat bazy danych
-├── public/               # zasoby statyczne
-└── README.md
-```
+## Learn More
 
----
+To learn more about Next.js, take a look at the following resources:
 
-## 📝 Licencja
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-Projekt prywatny / w fazie rozwoju.
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
