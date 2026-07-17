@@ -1,6 +1,9 @@
+import Link from "next/link";
 import { verifySession } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { ProfileEditor } from "@/app/profile/ProfileEditor";
+import { AppNav } from "@/app/components/AppNav";
+import { buttonPrimary } from "@/lib/ui";
 
 function toDateInputValue(date: Date | null): string {
   if (!date) return "";
@@ -50,14 +53,22 @@ export default async function ProfilePage() {
   };
 
   return (
-    <main className="mx-auto flex max-w-3xl flex-1 flex-col gap-10 p-8">
-      <div>
-        <h1 className="text-2xl font-semibold">Twój profil zawodowy</h1>
-        <p className="text-sm text-black/60 dark:text-white/60">
-          Te dane będą wykorzystywane do generowania CV dopasowanych do ofert pracy.
-        </p>
-      </div>
-      <ProfileEditor initialData={initialData} />
-    </main>
+    <>
+      <AppNav />
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-12">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Twój profil zawodowy</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Te dane będą wykorzystywane do generowania CV dopasowanych do ofert pracy.
+          </p>
+        </div>
+        <ProfileEditor initialData={initialData} />
+        <div className="border-t border-border pt-6">
+          <Link href="/generate" className={`${buttonPrimary} px-6 py-3 text-base`}>
+            Dalej: wygeneruj CV →
+          </Link>
+        </div>
+      </main>
+    </>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { SkillLevels } from "@/lib/definitions";
+import { input, buttonPrimary, buttonSecondary, errorText, card, tag } from "@/lib/ui";
 
 type SkillLevel = (typeof SkillLevels)[number];
 
@@ -44,12 +45,10 @@ type InitialData = {
 
 const SKILL_LEVEL_OPTIONS: SkillLevel[] = ["podstawowy", "sredni", "zaawansowany", "ekspert"];
 
-const inputClass =
-  "w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/20 dark:bg-transparent";
-const buttonClass =
-  "rounded-md bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black";
-const secondaryButtonClass =
-  "rounded-md border border-black/10 px-3 py-1.5 text-sm dark:border-white/20";
+const subFormClass = "flex flex-col gap-3 rounded-lg border border-dashed border-border p-4";
+const listItemClass = "rounded-lg border border-border p-4";
+const deleteButtonClass =
+  "shrink-0 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-danger-soft hover:text-danger";
 
 function formatDateDisplay(value: string): string {
   if (!value) return "";
@@ -207,79 +206,82 @@ export function ProfileEditor({ initialData }: { initialData: InitialData }) {
   }
 
   return (
-    <div className="flex flex-col gap-12">
+    <div className="flex flex-col gap-6">
       {/* Dane ogólne */}
-      <section className="flex flex-col gap-4">
+      <section className={`${card} flex flex-col gap-4`}>
         <h2 className="text-lg font-semibold">Dane ogólne</h2>
         <form onSubmit={saveGeneral} className="flex flex-col gap-3">
           <input
-            className={inputClass}
+            className={input}
             placeholder="Nagłówek zawodowy, np. Frontend Developer"
             value={general.headline}
             onChange={(e) => setGeneral({ ...general, headline: e.target.value })}
           />
           <textarea
-            className={inputClass}
+            className={input}
             placeholder="Podsumowanie zawodowe / o mnie"
             rows={4}
             value={general.summary}
             onChange={(e) => setGeneral({ ...general, summary: e.target.value })}
           />
           <input
-            className={inputClass}
+            className={input}
             placeholder="Lokalizacja"
             value={general.location}
             onChange={(e) => setGeneral({ ...general, location: e.target.value })}
           />
           <input
-            className={inputClass}
+            className={input}
             placeholder="Link do LinkedIn"
             value={general.linkedinUrl}
             onChange={(e) => setGeneral({ ...general, linkedinUrl: e.target.value })}
           />
           <div className="flex items-center gap-3">
-            <button type="submit" disabled={generalPending} className={buttonClass}>
+            <button type="submit" disabled={generalPending} className={buttonPrimary}>
               {generalPending ? "Zapisywanie…" : "Zapisz"}
             </button>
-            {generalStatus && <span className="text-sm text-black/60 dark:text-white/60">{generalStatus}</span>}
+            {generalStatus && <span className="text-sm text-muted-foreground">{generalStatus}</span>}
           </div>
         </form>
       </section>
 
       {/* Doświadczenie */}
-      <section className="flex flex-col gap-4">
+      <section className={`${card} flex flex-col gap-4`}>
         <h2 className="text-lg font-semibold">Doświadczenie zawodowe</h2>
-        <ul className="flex flex-col gap-3">
-          {experiences.map((item) => (
-            <li key={item.id} className="rounded-md border border-black/10 p-3 dark:border-white/20">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="font-medium">
-                    {item.position} — {item.companyName}
-                  </p>
-                  <p className="text-sm text-black/60 dark:text-white/60">
-                    {formatDateDisplay(item.startDate)} – {item.endDate ? formatDateDisplay(item.endDate) : "obecnie"}
-                  </p>
-                  {item.description && <p className="mt-1 text-sm">{item.description}</p>}
+        {experiences.length > 0 && (
+          <ul className="flex flex-col gap-3">
+            {experiences.map((item) => (
+              <li key={item.id} className={listItemClass}>
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="font-medium">
+                      {item.position} — {item.companyName}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {formatDateDisplay(item.startDate)} –{" "}
+                      {item.endDate ? formatDateDisplay(item.endDate) : "obecnie"}
+                    </p>
+                    {item.description && <p className="mt-1 text-sm">{item.description}</p>}
+                  </div>
+                  <button onClick={() => deleteExperience(item.id)} className={deleteButtonClass}>
+                    Usuń
+                  </button>
                 </div>
-                <button onClick={() => deleteExperience(item.id)} className={secondaryButtonClass}>
-                  Usuń
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-        <form onSubmit={addExperience} className="flex flex-col gap-3 rounded-md border border-dashed border-black/20 p-3 dark:border-white/20">
+              </li>
+            ))}
+          </ul>
+        )}
+        <form onSubmit={addExperience} className={subFormClass}>
           <div className="grid grid-cols-2 gap-3">
             <input
-              className={inputClass}
+              className={input}
               placeholder="Nazwa firmy"
               required
               value={newExperience.companyName}
               onChange={(e) => setNewExperience({ ...newExperience, companyName: e.target.value })}
             />
             <input
-              className={inputClass}
+              className={input}
               placeholder="Stanowisko"
               required
               value={newExperience.position}
@@ -287,136 +289,142 @@ export function ProfileEditor({ initialData }: { initialData: InitialData }) {
             />
           </div>
           <textarea
-            className={inputClass}
+            className={input}
             placeholder="Opis obowiązków/osiągnięć"
             rows={3}
             value={newExperience.description}
             onChange={(e) => setNewExperience({ ...newExperience, description: e.target.value })}
           />
           <div className="grid grid-cols-2 gap-3">
-            <label className="flex flex-col gap-1 text-sm">
+            <label className="flex flex-col gap-1 text-sm text-muted-foreground">
               Data rozpoczęcia
               <input
                 type="date"
-                className={inputClass}
+                className={input}
                 required
                 value={newExperience.startDate}
                 onChange={(e) => setNewExperience({ ...newExperience, startDate: e.target.value })}
               />
             </label>
-            <label className="flex flex-col gap-1 text-sm">
+            <label className="flex flex-col gap-1 text-sm text-muted-foreground">
               Data zakończenia (puste = obecna praca)
               <input
                 type="date"
-                className={inputClass}
+                className={input}
                 value={newExperience.endDate}
                 onChange={(e) => setNewExperience({ ...newExperience, endDate: e.target.value })}
               />
             </label>
           </div>
-          {experienceError && <p className="text-sm text-red-600">{experienceError}</p>}
-          <button type="submit" disabled={experiencePending} className={buttonClass}>
-            {experiencePending ? "Dodawanie…" : "Dodaj doświadczenie"}
+          {experienceError && <p className={errorText}>{experienceError}</p>}
+          <button type="submit" disabled={experiencePending} className={`${buttonSecondary} self-start`}>
+            {experiencePending ? "Dodawanie…" : "+ Dodaj doświadczenie"}
           </button>
         </form>
       </section>
 
       {/* Edukacja */}
-      <section className="flex flex-col gap-4">
+      <section className={`${card} flex flex-col gap-4`}>
         <h2 className="text-lg font-semibold">Wykształcenie</h2>
-        <ul className="flex flex-col gap-3">
-          {education.map((item) => (
-            <li key={item.id} className="rounded-md border border-black/10 p-3 dark:border-white/20">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="font-medium">
-                    {item.schoolName}
-                    {item.degree ? ` — ${item.degree}` : ""}
-                  </p>
-                  <p className="text-sm text-black/60 dark:text-white/60">
-                    {formatDateDisplay(item.startDate)} – {item.endDate ? formatDateDisplay(item.endDate) : "obecnie"}
-                  </p>
+        {education.length > 0 && (
+          <ul className="flex flex-col gap-3">
+            {education.map((item) => (
+              <li key={item.id} className={listItemClass}>
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="font-medium">
+                      {item.schoolName}
+                      {item.degree ? ` — ${item.degree}` : ""}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {formatDateDisplay(item.startDate)} –{" "}
+                      {item.endDate ? formatDateDisplay(item.endDate) : "obecnie"}
+                    </p>
+                  </div>
+                  <button onClick={() => deleteEducation(item.id)} className={deleteButtonClass}>
+                    Usuń
+                  </button>
                 </div>
-                <button onClick={() => deleteEducation(item.id)} className={secondaryButtonClass}>
-                  Usuń
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-        <form onSubmit={addEducation} className="flex flex-col gap-3 rounded-md border border-dashed border-black/20 p-3 dark:border-white/20">
+              </li>
+            ))}
+          </ul>
+        )}
+        <form onSubmit={addEducation} className={subFormClass}>
           <div className="grid grid-cols-2 gap-3">
             <input
-              className={inputClass}
+              className={input}
               placeholder="Nazwa szkoły/uczelni"
               required
               value={newEducation.schoolName}
               onChange={(e) => setNewEducation({ ...newEducation, schoolName: e.target.value })}
             />
             <input
-              className={inputClass}
+              className={input}
               placeholder="Kierunek / stopień"
               value={newEducation.degree}
               onChange={(e) => setNewEducation({ ...newEducation, degree: e.target.value })}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <label className="flex flex-col gap-1 text-sm">
+            <label className="flex flex-col gap-1 text-sm text-muted-foreground">
               Data rozpoczęcia
               <input
                 type="date"
-                className={inputClass}
+                className={input}
                 required
                 value={newEducation.startDate}
                 onChange={(e) => setNewEducation({ ...newEducation, startDate: e.target.value })}
               />
             </label>
-            <label className="flex flex-col gap-1 text-sm">
+            <label className="flex flex-col gap-1 text-sm text-muted-foreground">
               Data zakończenia
               <input
                 type="date"
-                className={inputClass}
+                className={input}
                 value={newEducation.endDate}
                 onChange={(e) => setNewEducation({ ...newEducation, endDate: e.target.value })}
               />
             </label>
           </div>
-          {educationError && <p className="text-sm text-red-600">{educationError}</p>}
-          <button type="submit" disabled={educationPending} className={buttonClass}>
-            {educationPending ? "Dodawanie…" : "Dodaj wykształcenie"}
+          {educationError && <p className={errorText}>{educationError}</p>}
+          <button type="submit" disabled={educationPending} className={`${buttonSecondary} self-start`}>
+            {educationPending ? "Dodawanie…" : "+ Dodaj wykształcenie"}
           </button>
         </form>
       </section>
 
       {/* Umiejętności */}
-      <section className="flex flex-col gap-4">
+      <section className={`${card} flex flex-col gap-4`}>
         <h2 className="text-lg font-semibold">Umiejętności</h2>
-        <ul className="flex flex-wrap gap-2">
-          {skills.map((item) => (
-            <li
-              key={item.id}
-              className="flex items-center gap-2 rounded-full border border-black/10 px-3 py-1 text-sm dark:border-white/20"
-            >
-              <span>
-                {item.name}
-                {item.level ? ` (${item.level})` : ""}
-              </span>
-              <button onClick={() => deleteSkill(item.id)} aria-label={`Usuń ${item.name}`} className="text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white">
-                ×
-              </button>
-            </li>
-          ))}
-        </ul>
+        {skills.length > 0 && (
+          <ul className="flex flex-wrap gap-2">
+            {skills.map((item) => (
+              <li key={item.id} className={tag}>
+                <span>
+                  {item.name}
+                  {item.level ? ` · ${item.level}` : ""}
+                </span>
+                <button
+                  onClick={() => deleteSkill(item.id)}
+                  aria-label={`Usuń ${item.name}`}
+                  className="text-muted-foreground hover:text-danger"
+                >
+                  ×
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
         <form onSubmit={addSkill} className="flex flex-wrap items-end gap-3">
           <input
-            className={inputClass + " w-48"}
+            className={input + " w-48"}
             placeholder="Umiejętność"
             required
             value={newSkill.name}
             onChange={(e) => setNewSkill({ ...newSkill, name: e.target.value })}
           />
           <select
-            className={inputClass + " w-40"}
+            className={input + " w-40"}
             value={newSkill.level}
             onChange={(e) => setNewSkill({ ...newSkill, level: e.target.value as SkillLevel | "" })}
           >
@@ -428,43 +436,46 @@ export function ProfileEditor({ initialData }: { initialData: InitialData }) {
             ))}
           </select>
           <input
-            className={inputClass + " w-40"}
+            className={input + " w-40"}
             placeholder="Kategoria"
             value={newSkill.category}
             onChange={(e) => setNewSkill({ ...newSkill, category: e.target.value })}
           />
-          <button type="submit" disabled={skillPending} className={buttonClass}>
-            {skillPending ? "Dodawanie…" : "Dodaj"}
+          <button type="submit" disabled={skillPending} className={buttonSecondary}>
+            {skillPending ? "Dodawanie…" : "+ Dodaj"}
           </button>
         </form>
-        {skillError && <p className="text-sm text-red-600">{skillError}</p>}
+        {skillError && <p className={errorText}>{skillError}</p>}
       </section>
 
       {/* Zainteresowania */}
-      <section className="flex flex-col gap-4">
+      <section className={`${card} flex flex-col gap-4`}>
         <h2 className="text-lg font-semibold">Zainteresowania</h2>
-        <ul className="flex flex-wrap gap-2">
-          {interests.map((item) => (
-            <li
-              key={item.id}
-              className="flex items-center gap-2 rounded-full border border-black/10 px-3 py-1 text-sm dark:border-white/20"
-            >
-              <span>{item.name}</span>
-              <button onClick={() => deleteInterest(item.id)} aria-label={`Usuń ${item.name}`} className="text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white">
-                ×
-              </button>
-            </li>
-          ))}
-        </ul>
+        {interests.length > 0 && (
+          <ul className="flex flex-wrap gap-2">
+            {interests.map((item) => (
+              <li key={item.id} className={tag}>
+                <span>{item.name}</span>
+                <button
+                  onClick={() => deleteInterest(item.id)}
+                  aria-label={`Usuń ${item.name}`}
+                  className="text-muted-foreground hover:text-danger"
+                >
+                  ×
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
         <form onSubmit={addInterest} className="flex items-end gap-3">
           <input
-            className={inputClass + " w-64"}
+            className={input + " w-64"}
             placeholder="Nowe zainteresowanie"
             value={newInterest}
             onChange={(e) => setNewInterest(e.target.value)}
           />
-          <button type="submit" disabled={interestPending} className={buttonClass}>
-            {interestPending ? "Dodawanie…" : "Dodaj"}
+          <button type="submit" disabled={interestPending} className={buttonSecondary}>
+            {interestPending ? "Dodawanie…" : "+ Dodaj"}
           </button>
         </form>
       </section>
