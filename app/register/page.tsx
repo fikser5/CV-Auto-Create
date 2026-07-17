@@ -10,11 +10,15 @@ export default function RegisterPage() {
   const [state, action, pending] = useActionState(registerUser, undefined);
 
   return (
-    <main className="flex flex-1 items-center justify-center px-6 py-12">
+    <main className="relative flex flex-1 items-center justify-center px-6 py-12">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[28rem] bg-[radial-gradient(ellipse_50%_45%_at_50%_-5%,var(--rose-soft),transparent)]"
+      />
       <div className="w-full max-w-sm">
         <div className="mb-8 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-brand text-sm font-bold text-primary-foreground">
               C
             </span>
             <span className="font-semibold">CVAutomat</span>

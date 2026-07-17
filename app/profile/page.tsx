@@ -3,7 +3,8 @@ import { verifySession } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { ProfileEditor } from "@/app/profile/ProfileEditor";
 import { AppNav } from "@/app/components/AppNav";
-import { buttonPrimary } from "@/lib/ui";
+import { buttonPrimary, eyebrow } from "@/lib/ui";
+import { ArrowRightIcon } from "@/app/components/icons";
 
 function toDateInputValue(date: Date | null): string {
   if (!date) return "";
@@ -20,6 +21,7 @@ export default async function ProfilePage() {
       education: true,
       skills: true,
       interests: true,
+      languages: { orderBy: { orderIndex: "asc" } },
     },
   });
 
@@ -27,7 +29,9 @@ export default async function ProfilePage() {
     headline: profile?.headline ?? "",
     summary: profile?.summary ?? "",
     location: profile?.location ?? "",
+    phone: profile?.phone ?? "",
     linkedinUrl: profile?.linkedinUrl ?? "",
+    photoUrl: profile?.photoUrl ?? null,
     experiences: (profile?.experiences ?? []).map((e) => ({
       id: e.id,
       companyName: e.companyName,
@@ -50,6 +54,7 @@ export default async function ProfilePage() {
       category: s.category ?? "",
     })),
     interests: (profile?.interests ?? []).map((i) => ({ id: i.id, name: i.name })),
+    languages: (profile?.languages ?? []).map((l) => ({ id: l.id, name: l.name, level: l.level })),
   };
 
   return (
@@ -57,15 +62,19 @@ export default async function ProfilePage() {
       <AppNav />
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-12">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Twój profil zawodowy</h1>
+          <span className={eyebrow}>Krok 1</span>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight">Twój profil zawodowy</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Te dane będą wykorzystywane do generowania CV dopasowanych do ofert pracy.
+            Te dane będą wykorzystywane do generowania CV dopasowanych do ofert pracy — im więcej
+            realnych szczegółów, tym trafniejsze dopasowanie.
           </p>
         </div>
         <ProfileEditor initialData={initialData} />
-        <div className="border-t border-border pt-6">
-          <Link href="/generate" className={`${buttonPrimary} px-6 py-3 text-base`}>
-            Dalej: wygeneruj CV →
+        <div className="flex items-center justify-between gap-4 border-t border-border pt-6">
+          <p className="text-sm text-muted-foreground">Gotowy profil? Przejdź do generowania CV.</p>
+          <Link href="/generate" className={`${buttonPrimary} shrink-0 px-6 py-3 text-base`}>
+            Dalej: wygeneruj CV
+            <ArrowRightIcon />
           </Link>
         </div>
       </main>

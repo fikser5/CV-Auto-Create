@@ -1,37 +1,49 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fafafa;
-  --foreground: #18181b;
+  --background: #faf9fb;
+  --foreground: #1c1524;
   --card: #ffffff;
-  --card-foreground: #18181b;
-  --border: #e4e4e7;
-  --muted-foreground: #71717a;
-  --primary: #4f46e5;
-  --primary-hover: #4338ca;
+  --card-foreground: #1c1524;
+  --border: #e6e1eb;
+  --muted-foreground: #6f6579;
+  --primary: #6d28d9;
+  --primary-hover: #5b21b6;
   --primary-foreground: #ffffff;
-  --accent-soft: #eef2ff;
-  --accent-soft-foreground: #4338ca;
+  --accent-soft: #f3e8ff;
+  --accent-soft-foreground: #6d28d9;
+  --rose: #be123c;
+  --rose-soft: #ffe4e6;
+  --rose-soft-foreground: #9f1239;
+  --blue: #2563eb;
   --danger: #dc2626;
   --danger-soft: #fef2f2;
   --radius: 0.75rem;
+  --grid-line: rgba(109, 40, 217, 0.08);
+  --glow: rgba(109, 40, 217, 0.18);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0c;
-    --foreground: #f4f4f5;
-    --card: #18181b;
-    --card-foreground: #f4f4f5;
-    --border: #27272a;
-    --muted-foreground: #a1a1aa;
-    --primary: #6366f1;
-    --primary-hover: #818cf8;
-    --primary-foreground: #ffffff;
-    --accent-soft: #1e1b4b;
-    --accent-soft-foreground: #c7d2fe;
+    --background: #0b0710;
+    --foreground: #f3eef8;
+    --card: #171018;
+    --card-foreground: #f3eef8;
+    --border: #2c2233;
+    --muted-foreground: #a99bb5;
+    --primary: #a78bfa;
+    --primary-hover: #c4b5fd;
+    --primary-foreground: #1c1023;
+    --accent-soft: #2a1a45;
+    --accent-soft-foreground: #d8b4fe;
+    --rose: #fb7185;
+    --rose-soft: #3f0d1b;
+    --rose-soft-foreground: #fda4af;
+    --blue: #60a5fa;
     --danger: #f87171;
     --danger-soft: #450a0a;
+    --grid-line: rgba(167, 139, 250, 0.08);
+    --glow: rgba(167, 139, 250, 0.25);
   }
 }
 
@@ -39,35 +51,47 @@
    Attribute selectors outrank the plain `:root` rules above regardless of
    source order, so these always win over the system preference. */
 :root[data-theme="light"] {
-  --background: #fafafa;
-  --foreground: #18181b;
+  --background: #faf9fb;
+  --foreground: #1c1524;
   --card: #ffffff;
-  --card-foreground: #18181b;
-  --border: #e4e4e7;
-  --muted-foreground: #71717a;
-  --primary: #4f46e5;
-  --primary-hover: #4338ca;
+  --card-foreground: #1c1524;
+  --border: #e6e1eb;
+  --muted-foreground: #6f6579;
+  --primary: #6d28d9;
+  --primary-hover: #5b21b6;
   --primary-foreground: #ffffff;
-  --accent-soft: #eef2ff;
-  --accent-soft-foreground: #4338ca;
+  --accent-soft: #f3e8ff;
+  --accent-soft-foreground: #6d28d9;
+  --rose: #be123c;
+  --rose-soft: #ffe4e6;
+  --rose-soft-foreground: #9f1239;
+  --blue: #2563eb;
   --danger: #dc2626;
   --danger-soft: #fef2f2;
+  --grid-line: rgba(109, 40, 217, 0.08);
+  --glow: rgba(109, 40, 217, 0.18);
 }
 
 :root[data-theme="dark"] {
-  --background: #0a0a0c;
-  --foreground: #f4f4f5;
-  --card: #18181b;
-  --card-foreground: #f4f4f5;
-  --border: #27272a;
-  --muted-foreground: #a1a1aa;
-  --primary: #6366f1;
-  --primary-hover: #818cf8;
-  --primary-foreground: #ffffff;
-  --accent-soft: #1e1b4b;
-  --accent-soft-foreground: #c7d2fe;
+  --background: #0b0710;
+  --foreground: #f3eef8;
+  --card: #171018;
+  --card-foreground: #f3eef8;
+  --border: #2c2233;
+  --muted-foreground: #a99bb5;
+  --primary: #a78bfa;
+  --primary-hover: #c4b5fd;
+  --primary-foreground: #1c1023;
+  --accent-soft: #2a1a45;
+  --accent-soft-foreground: #d8b4fe;
+  --rose: #fb7185;
+  --rose-soft: #3f0d1b;
+  --rose-soft-foreground: #fda4af;
+  --blue: #60a5fa;
   --danger: #f87171;
   --danger-soft: #450a0a;
+  --grid-line: rgba(167, 139, 250, 0.08);
+  --glow: rgba(167, 139, 250, 0.25);
 }
 
 @theme inline {
@@ -82,19 +106,62 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-accent-soft: var(--accent-soft);
   --color-accent-soft-foreground: var(--accent-soft-foreground);
+  --color-rose: var(--rose);
+  --color-rose-soft: var(--rose-soft);
+  --color-rose-soft-foreground: var(--rose-soft-foreground);
+  --color-blue: var(--blue);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --radius-card: var(--radius);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-instrument-serif);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  background-image: radial-gradient(circle, var(--grid-line) 1px, transparent 1px);
+  background-size: 28px 28px;
 }
 
 ::selection {
   background: var(--accent-soft);
   color: var(--accent-soft-foreground);
+}
+
+/* Reusable brand gradient — violet → rose. Use via .text-gradient / .bg-gradient-brand. */
+.text-gradient {
+  background-image: linear-gradient(115deg, var(--primary) 10%, var(--rose) 90%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.bg-gradient-brand {
+  background-image: linear-gradient(115deg, var(--primary) 10%, var(--rose) 100%);
+}
+
+.glow-primary {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 35%, transparent),
+    0 8px 30px -8px var(--glow);
+}
+
+.card-hover {
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+  box-shadow: 0 12px 34px -14px var(--glow);
+}
+
+@media print {
+  .glow-primary {
+    box-shadow: none;
+  }
 }

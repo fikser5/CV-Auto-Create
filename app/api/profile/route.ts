@@ -13,6 +13,7 @@ export async function GET() {
       education: true,
       skills: true,
       interests: true,
+      languages: { orderBy: { orderIndex: "asc" } },
     },
   });
 
@@ -29,7 +30,7 @@ export async function PUT(request: Request) {
     return Response.json({ errors: validatedFields.error.flatten().fieldErrors }, { status: 400 });
   }
 
-  const { headline, summary, location, linkedinUrl } = validatedFields.data;
+  const { headline, summary, location, phone, linkedinUrl } = validatedFields.data;
 
   const profile = await prisma.profile.upsert({
     where: { userId },
@@ -37,6 +38,7 @@ export async function PUT(request: Request) {
       headline: headline || null,
       summary: summary || null,
       location: location || null,
+      phone: phone || null,
       linkedinUrl: linkedinUrl || null,
     },
     create: {
@@ -44,6 +46,7 @@ export async function PUT(request: Request) {
       headline: headline || null,
       summary: summary || null,
       location: location || null,
+      phone: phone || null,
       linkedinUrl: linkedinUrl || null,
     },
   });

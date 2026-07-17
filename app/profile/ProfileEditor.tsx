@@ -1,10 +1,21 @@
 "use client";
 
-import { useState } from "react";
-import type { SkillLevels } from "@/lib/definitions";
+import { useRef, useState } from "react";
+import type { SkillLevels, LanguageLevels } from "@/lib/definitions";
+import { LanguageLevelLabels, LanguageLevelBars } from "@/lib/definitions";
 import { input, buttonPrimary, buttonSecondary, errorText, card, tag } from "@/lib/ui";
+import {
+  UserIcon,
+  BriefcaseIcon,
+  GraduationCapIcon,
+  TargetIcon,
+  HeartIcon,
+  GlobeIcon,
+  CameraIcon,
+} from "@/app/components/icons";
 
 type SkillLevel = (typeof SkillLevels)[number];
+type LanguageLevel = (typeof LanguageLevels)[number];
 
 type Experience = {
   id: string;
@@ -32,23 +43,41 @@ type Skill = {
 
 type Interest = { id: string; name: string };
 
+type Language = { id: string; name: string; level: LanguageLevel };
+
 type InitialData = {
   headline: string;
   summary: string;
   location: string;
+  phone: string;
   linkedinUrl: string;
+  photoUrl: string | null;
   experiences: Experience[];
   education: Education[];
   skills: Skill[];
   interests: Interest[];
+  languages: Language[];
 };
 
 const SKILL_LEVEL_OPTIONS: SkillLevel[] = ["podstawowy", "sredni", "zaawansowany", "ekspert"];
+const LANGUAGE_LEVEL_OPTIONS: LanguageLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2", "native"];
+const MAX_PHOTO_BYTES = 3 * 1024 * 1024;
 
 const subFormClass = "flex flex-col gap-3 rounded-lg border border-dashed border-border p-4";
 const listItemClass = "rounded-lg border border-border p-4";
 const deleteButtonClass =
   "shrink-0 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-danger-soft hover:text-danger";
+
+function SectionTitle({ icon: Icon, children }: { icon: typeof UserIcon; children: React.ReactNode }) {
+  return (
+    <h2 className="flex items-center gap-2.5 text-lg font-semibold">
+      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-soft text-accent-soft-foreground">
+        <Icon className="h-4 w-4" />
+      </span>
+      {children}
+    </h2>
+  );
+}
 
 function formatDateDisplay(value: string): string {
   if (!value) return "";
@@ -74,10 +103,16 @@ export function ProfileEditor({ initialData }: { initialData: InitialData }) {
     headline: initialData.headline,
     summary: initialData.summary,
     location: initialData.location,
+    phone: initialData.phone,
     linkedinUrl: initialData.linkedinUrl,
   });
   const [generalStatus, setGeneralStatus] = useState<string | null>(null);
   const [generalPending, setGeneralPending] = useState(false);
+
+  const [photoUrl, setPhotoUrl] = useState<string | null>(initialData.photoUrl);
+  const [photoPending, setPhotoPending] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   const [experiences, setExperiences] = useState<Experience[]>(initialData.experiences);
   const [newExperience, setNewExperience] = useState({
@@ -108,6 +143,84 @@ export function ProfileEditor({ initialData }: { initialData: InitialData }) {
   const [interests, setInterests] = useState<Interest[]>(initialData.interests);
   const [newInterest, setNewInterest] = useState("");
   const [interestPending, setInterestPending] = useState(false);
+
+  const [languages, setLanguages] = useState<Language[]>(initialData.languages);
+  const [newLanguage, setNewLanguage] = useState<{ name: string; level: LanguageLevel | "" }>({
+    name: "",
+    level: "",
+  });
+  const [languagePending, setLanguagePending] = useState(false);
+  const [languageError, setLanguageError] = useState<string | null>(null);
+
+  async function handlePhotoSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setPhotoError(null);
+
+    if (!["image/jpeg", "image/png"].includes(file.type)) {
+      setPhotoError("Zdjęcie musi być w formacie JPG lub PNG.");
+      return;
+    }
+    if (file.size > MAX_PHOTO_BYTES) {
+      setPhotoError("Zdjęcie jest za duże (maks. 3 MB).");
+      return;
+    }
+
+    setPhotoPending(true);
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("Nie udało się odczytać pliku."));
+        reader.readAsDataURL(file);
+      });
+      const { photoUrl: saved } = await apiRequest("/api/profile/photo", "POST", { photo: dataUrl });
+      setPhotoUrl(saved);
+    } catch (error) {
+      setPhotoError(error instanceof Error ? error.message : "Błąd wgrywania zdjęcia.");
+    } finally {
+      setPhotoPending(false);
+    }
+  }
+
+  async function removePhoto() {
+    setPhotoPending(true);
+    setPhotoError(null);
+    try {
+      await apiRequest("/api/profile/photo", "DELETE");
+      setPhotoUrl(null);
+    } catch (error) {
+      setPhotoError(error instanceof Error ? error.message : "Błąd usuwania zdjęcia.");
+    } finally {
+      setPhotoPending(false);
+    }
+  }
+
+  async function addLanguage(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newLanguage.level) return;
+    setLanguagePending(true);
+    setLanguageError(null);
+    try {
+      const { language } = await apiRequest("/api/profile/languages", "POST", {
+        name: newLanguage.name,
+        level: newLanguage.level,
+      });
+      setLanguages((prev) => [...prev, language]);
+      setNewLanguage({ name: "", level: "" });
+    } catch (error) {
+      setLanguageError(error instanceof Error ? error.message : "Błąd zapisu.");
+    } finally {
+      setLanguagePending(false);
+    }
+  }
+
+  async function deleteLanguage(id: string) {
+    await apiRequest(`/api/profile/languages/${id}`, "DELETE");
+    setLanguages((prev) => prev.filter((item) => item.id !== id));
+  }
 
   async function saveGeneral(e: React.FormEvent) {
     e.preventDefault();
@@ -209,7 +322,45 @@ export function ProfileEditor({ initialData }: { initialData: InitialData }) {
     <div className="flex flex-col gap-6">
       {/* Dane ogólne */}
       <section className={`${card} flex flex-col gap-4`}>
-        <h2 className="text-lg font-semibold">Dane ogólne</h2>
+        <SectionTitle icon={UserIcon}>Dane ogólne</SectionTitle>
+
+        <div className="flex items-center gap-4">
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-background">
+            {photoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={photoUrl} alt="Zdjęcie profilowe" className="h-full w-full object-cover" />
+            ) : (
+              <CameraIcon className="h-6 w-6 text-muted-foreground" />
+            )}
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-2">
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/jpeg,image/png"
+                className="hidden"
+                onChange={handlePhotoSelected}
+              />
+              <button
+                type="button"
+                disabled={photoPending}
+                onClick={() => photoInputRef.current?.click()}
+                className={buttonSecondary}
+              >
+                {photoPending ? "Wgrywanie…" : photoUrl ? "Zmień zdjęcie" : "Wgraj zdjęcie"}
+              </button>
+              {photoUrl && (
+                <button type="button" disabled={photoPending} onClick={removePhoto} className={deleteButtonClass}>
+                  Usuń
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">JPG lub PNG, maks. 3 MB. Użyte w podglądzie i PDF CV.</p>
+            {photoError && <p className={errorText}>{photoError}</p>}
+          </div>
+        </div>
+
         <form onSubmit={saveGeneral} className="flex flex-col gap-3">
           <input
             className={input}
@@ -224,12 +375,20 @@ export function ProfileEditor({ initialData }: { initialData: InitialData }) {
             value={general.summary}
             onChange={(e) => setGeneral({ ...general, summary: e.target.value })}
           />
-          <input
-            className={input}
-            placeholder="Lokalizacja"
-            value={general.location}
-            onChange={(e) => setGeneral({ ...general, location: e.target.value })}
-          />
+          <div className="grid grid-cols-2 gap-3">
+            <input
+              className={input}
+              placeholder="Lokalizacja"
+              value={general.location}
+              onChange={(e) => setGeneral({ ...general, location: e.target.value })}
+            />
+            <input
+              className={input}
+              placeholder="Telefon"
+              value={general.phone}
+              onChange={(e) => setGeneral({ ...general, phone: e.target.value })}
+            />
+          </div>
           <input
             className={input}
             placeholder="Link do LinkedIn"
@@ -247,7 +406,7 @@ export function ProfileEditor({ initialData }: { initialData: InitialData }) {
 
       {/* Doświadczenie */}
       <section className={`${card} flex flex-col gap-4`}>
-        <h2 className="text-lg font-semibold">Doświadczenie zawodowe</h2>
+        <SectionTitle icon={BriefcaseIcon}>Doświadczenie zawodowe</SectionTitle>
         {experiences.length > 0 && (
           <ul className="flex flex-col gap-3">
             {experiences.map((item) => (
@@ -325,7 +484,7 @@ export function ProfileEditor({ initialData }: { initialData: InitialData }) {
 
       {/* Edukacja */}
       <section className={`${card} flex flex-col gap-4`}>
-        <h2 className="text-lg font-semibold">Wykształcenie</h2>
+        <SectionTitle icon={GraduationCapIcon}>Wykształcenie</SectionTitle>
         {education.length > 0 && (
           <ul className="flex flex-col gap-3">
             {education.map((item) => (
@@ -395,7 +554,7 @@ export function ProfileEditor({ initialData }: { initialData: InitialData }) {
 
       {/* Umiejętności */}
       <section className={`${card} flex flex-col gap-4`}>
-        <h2 className="text-lg font-semibold">Umiejętności</h2>
+        <SectionTitle icon={TargetIcon}>Umiejętności</SectionTitle>
         {skills.length > 0 && (
           <ul className="flex flex-wrap gap-2">
             {skills.map((item) => (
@@ -448,9 +607,71 @@ export function ProfileEditor({ initialData }: { initialData: InitialData }) {
         {skillError && <p className={errorText}>{skillError}</p>}
       </section>
 
+      {/* Języki */}
+      <section className={`${card} flex flex-col gap-4`}>
+        <SectionTitle icon={GlobeIcon}>Języki</SectionTitle>
+        {languages.length > 0 && (
+          <ul className="flex flex-col gap-2">
+            {languages.map((item) => (
+              <li key={item.id} className="flex items-center justify-between gap-2 rounded-lg border border-border p-3">
+                <span className="text-sm">
+                  <span className="font-medium">{item.name}</span> ·{" "}
+                  <span className="text-muted-foreground">{LanguageLevelLabels[item.level]}</span>
+                  {item.level !== "native" && (
+                    <span className="ml-2 inline-flex gap-0.5 align-middle">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <span
+                          key={i}
+                          className={`h-1.5 w-3 rounded-full ${
+                            i < LanguageLevelBars[item.level] ? "bg-primary" : "bg-border"
+                          }`}
+                        />
+                      ))}
+                    </span>
+                  )}
+                </span>
+                <button
+                  onClick={() => deleteLanguage(item.id)}
+                  aria-label={`Usuń ${item.name}`}
+                  className={deleteButtonClass}
+                >
+                  Usuń
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <form onSubmit={addLanguage} className="flex flex-wrap items-end gap-3">
+          <input
+            className={input + " w-48"}
+            placeholder="Język, np. Angielski"
+            required
+            value={newLanguage.name}
+            onChange={(e) => setNewLanguage({ ...newLanguage, name: e.target.value })}
+          />
+          <select
+            className={input + " w-56"}
+            required
+            value={newLanguage.level}
+            onChange={(e) => setNewLanguage({ ...newLanguage, level: e.target.value as LanguageLevel | "" })}
+          >
+            <option value="">Poziom</option>
+            {LANGUAGE_LEVEL_OPTIONS.map((level) => (
+              <option key={level} value={level}>
+                {level === "native" ? "Język ojczysty" : `${level} — ${LanguageLevelLabels[level]}`}
+              </option>
+            ))}
+          </select>
+          <button type="submit" disabled={languagePending} className={buttonSecondary}>
+            {languagePending ? "Dodawanie…" : "+ Dodaj"}
+          </button>
+        </form>
+        {languageError && <p className={errorText}>{languageError}</p>}
+      </section>
+
       {/* Zainteresowania */}
       <section className={`${card} flex flex-col gap-4`}>
-        <h2 className="text-lg font-semibold">Zainteresowania</h2>
+        <SectionTitle icon={HeartIcon}>Zainteresowania</SectionTitle>
         {interests.length > 0 && (
           <ul className="flex flex-wrap gap-2">
             {interests.map((item) => (

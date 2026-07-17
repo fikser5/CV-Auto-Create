@@ -18,6 +18,16 @@ enum SkillLevel {
   ekspert
 }
 
+enum LanguageLevel {
+  A1
+  A2
+  B1
+  B2
+  C1
+  C2
+  native
+}
+
 model User {
   id           String   @id @default(uuid())
   email        String   @unique
@@ -41,6 +51,8 @@ model Profile {
   headline    String?
   summary     String?
   location    String?
+  phone       String?
+  photoUrl    String?  @map("photo_url")
   linkedinUrl String?  @map("linkedin_url")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -49,8 +61,21 @@ model Profile {
   education   Education[]
   skills      Skill[]
   interests   Interest[]
+  languages   Language[]
 
   @@map("profiles")
+}
+
+model Language {
+  id         String        @id @default(uuid())
+  profileId  String        @map("profile_id")
+  name       String
+  level      LanguageLevel
+  orderIndex Int           @default(0) @map("order_index")
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@map("languages")
 }
 
 model Experience {

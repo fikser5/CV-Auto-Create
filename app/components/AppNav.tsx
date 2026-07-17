@@ -18,7 +18,7 @@ export function AppNav() {
     <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur print:hidden">
       <nav className="mx-auto flex max-w-5xl items-center gap-1 px-4 py-3 sm:px-6">
         <Link href="/dashboard" className="mr-2 flex shrink-0 items-center gap-2 sm:mr-4">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-brand text-sm font-bold text-primary-foreground">
             C
           </span>
           <span className="hidden text-sm font-semibold sm:inline">CVAutomat</span>

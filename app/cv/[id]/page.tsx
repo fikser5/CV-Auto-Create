@@ -3,17 +3,70 @@ import { notFound } from "next/navigation";
 import { verifySession } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { GeneratedCvContentSchema } from "@/lib/cv-schema";
+import { LanguageLevelLabels, LanguageLevelBars } from "@/lib/definitions";
 import { AppNav } from "@/app/components/AppNav";
-import { buttonPrimary, buttonSecondary } from "@/lib/ui";
+import { buttonPrimary, buttonSecondary, badge } from "@/lib/ui";
+import { CheckCircleIcon, MapPinIcon, PhoneIcon, MailIcon, GlobeIcon } from "@/app/components/icons";
+
+// Fixed CV document palette — intentionally independent of the app's light/dark
+// theme tokens, since this must always visually match the exported PDF
+// (lib/cv-pdf.tsx uses the same hex values — keep both in sync).
+const DOC = {
+  banner: "#2c4f61",
+  bannerAccent: "#3f7188",
+  bannerRoleText: "#cfe1e8",
+  sidebarBg: "#e9eef1",
+  heading: "#2c4f61",
+  text: "#242424",
+  muted: "#5b6670",
+  accent: "#3f7188",
+  barEmpty: "#c9d3d8",
+};
+
+const CONSENT_TEXT =
+  "Wyrażam zgodę na przetwarzanie moich danych osobowych w celu prowadzenia rekrutacji na aplikowane przeze mnie stanowisko.";
+
+function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
+function LanguageBars({ filled }: { filled: number }) {
+  return (
+    <div className="mt-1.5 mb-1 flex gap-1">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <span
+          key={i}
+          className="h-1 w-4 rounded-full"
+          style={{ backgroundColor: i < filled ? DOC.accent : DOC.barEmpty }}
+        />
+      ))}
+    </div>
+  );
+}
 
 export default async function CvPage({ params }: { params: Promise<{ id: string }> }) {
   const { userId } = await verifySession();
   const { id } = await params;
 
-  const generatedCv = await prisma.generatedCv.findUnique({
-    where: { id },
-    include: { jobPosting: true },
-  });
+  const [generatedCv, user, profile] = await Promise.all([
+    prisma.generatedCv.findUnique({ where: { id }, include: { jobPosting: true } }),
+    prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { fullName: true, email: true } }),
+    prisma.profile.findUnique({
+      where: { userId },
+      select: {
+        location: true,
+        phone: true,
+        linkedinUrl: true,
+        photoUrl: true,
+        languages: { orderBy: { orderIndex: "asc" } },
+      },
+    }),
+  ]);
 
   if (!generatedCv || generatedCv.userId !== userId) {
     notFound();
@@ -24,17 +77,23 @@ export default async function CvPage({ params }: { params: Promise<{ id: string 
     throw new Error("Zapisana treść CV ma nieoczekiwany format.");
   }
   const cv = parsed.data;
+  const languages = profile?.languages ?? [];
 
   return (
     <>
       <AppNav />
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-12 print:p-0">
+      <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-12 print:p-0">
         <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
-          <p className="text-sm text-muted-foreground">
-            Dopasowane do oferty:{" "}
-            <span className="font-medium text-foreground">{generatedCv.jobPosting.jobTitle || "—"}</span>
-            {generatedCv.jobPosting.companyName ? ` @ ${generatedCv.jobPosting.companyName}` : ""}
-          </p>
+          <div>
+            <span className={badge}>
+              <CheckCircleIcon className="h-3.5 w-3.5 text-primary" />
+              Dopasowane do oferty
+            </span>
+            <p className="mt-2 text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">{generatedCv.jobPosting.jobTitle || "—"}</span>
+              {generatedCv.jobPosting.companyName ? ` @ ${generatedCv.jobPosting.companyName}` : ""}
+            </p>
+          </div>
           <div className="flex gap-3">
             <Link href="/generate" className={buttonSecondary}>
               Generuj kolejne CV
@@ -45,76 +104,202 @@ export default async function CvPage({ params }: { params: Promise<{ id: string 
           </div>
         </div>
 
-        <article className="flex flex-col gap-6 overflow-hidden rounded-card border border-border bg-white text-black shadow-sm print:border-none print:shadow-none">
-          <div className="h-2 bg-primary print:hidden" />
-          <div className="flex flex-col gap-6 px-10 pb-10">
-            <header>
-              <h1 className="text-2xl font-bold">{cv.headline}</h1>
-              <p className="mt-2 text-sm leading-relaxed text-black/70">{cv.summary}</p>
-            </header>
+        <article
+          className="glow-primary overflow-hidden rounded-card border border-border shadow-sm print:border-none print:shadow-none"
+          style={{ color: DOC.text }}
+        >
+          <div className="flex flex-col sm:flex-row">
+            {/* Sidebar */}
+            <div className="shrink-0 sm:w-[35%]" style={{ backgroundColor: DOC.sidebarBg }}>
+              {profile?.photoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={profile.photoUrl}
+                  alt={user.fullName}
+                  className="h-40 w-full object-cover sm:h-44"
+                />
+              ) : (
+                <div
+                  className="flex h-40 w-full items-center justify-center sm:h-44"
+                  style={{ backgroundColor: DOC.banner }}
+                >
+                  <span className="text-4xl font-bold text-white">{initials(user.fullName)}</span>
+                </div>
+              )}
 
-            {cv.experience.length > 0 && (
-              <section>
-                <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-black/50">
-                  Doświadczenie zawodowe
-                </h2>
-                <div className="flex flex-col gap-4">
-                  {cv.experience.map((item, i) => (
-                    <div key={i}>
-                      <div className="flex items-baseline justify-between gap-3">
-                        <p className="font-medium">
-                          {item.position} — {item.company}
-                        </p>
-                        <p className="shrink-0 text-sm text-black/50">{item.period}</p>
+              <div className="flex flex-col gap-6 p-5">
+                <div>
+                  <h2
+                    className="mb-3 text-xs font-bold uppercase tracking-widest"
+                    style={{ color: DOC.heading }}
+                  >
+                    Profil osobisty
+                  </h2>
+                  <div className="flex flex-col gap-2.5 text-sm">
+                    {profile?.location && (
+                      <div className="flex items-start gap-2">
+                        <MapPinIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: DOC.accent }} />
+                        <span>{profile.location}</span>
                       </div>
-                      {item.highlights.length > 0 && (
-                        <ul className="mt-1 list-disc pl-5 text-sm text-black/80">
-                          {item.highlights.map((h, j) => (
-                            <li key={j}>{h}</li>
-                          ))}
-                        </ul>
-                      )}
+                    )}
+                    {profile?.phone && (
+                      <div className="flex items-start gap-2">
+                        <PhoneIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: DOC.accent }} />
+                        <span>{profile.phone}</span>
+                      </div>
+                    )}
+                    <div className="flex items-start gap-2">
+                      <MailIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: DOC.accent }} />
+                      <span className="break-all">{user.email}</span>
                     </div>
-                  ))}
+                    {profile?.linkedinUrl && (
+                      <div className="flex items-start gap-2">
+                        <GlobeIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: DOC.accent }} />
+                        <span className="break-all">{profile.linkedinUrl}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </section>
-            )}
 
-            {cv.education.length > 0 && (
-              <section>
-                <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-black/50">
-                  Wykształcenie
-                </h2>
-                <div className="flex flex-col gap-2">
-                  {cv.education.map((item, i) => (
-                    <div key={i} className="flex items-baseline justify-between gap-3">
-                      <p className="font-medium">
-                        {item.school} — {item.degree}
-                      </p>
-                      <p className="shrink-0 text-sm text-black/50">{item.period}</p>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {cv.skills.length > 0 && (
-              <section>
-                <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-black/50">
-                  Umiejętności
-                </h2>
-                <div className="flex flex-wrap gap-2">
-                  {cv.skills.map((skill, i) => (
-                    <span
-                      key={i}
-                      className="rounded-full bg-black/5 px-3 py-1 text-sm text-black/80 print:border print:border-black/20"
+                {cv.skills.length > 0 && (
+                  <div>
+                    <h2
+                      className="mb-3 text-xs font-bold uppercase tracking-widest"
+                      style={{ color: DOC.heading }}
                     >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </section>
-            )}
+                      Umiejętności
+                    </h2>
+                    <ul className="flex flex-col gap-1.5 text-sm">
+                      {cv.skills.map((skill, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <span
+                            className="mt-1.5 h-1 w-1 shrink-0 rounded-full"
+                            style={{ backgroundColor: DOC.accent }}
+                          />
+                          {skill}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {languages.length > 0 && (
+                  <div>
+                    <h2
+                      className="mb-3 text-xs font-bold uppercase tracking-widest"
+                      style={{ color: DOC.heading }}
+                    >
+                      Języki
+                    </h2>
+                    <div className="flex flex-col gap-3">
+                      {languages.map((lang) => (
+                        <div key={lang.id} className="text-sm">
+                          <div className="flex items-baseline justify-between">
+                            <span className="font-semibold">{lang.name}:</span>
+                            {lang.level !== "native" && (
+                              <span className="text-xs font-semibold" style={{ color: DOC.muted }}>
+                                {lang.level}
+                              </span>
+                            )}
+                          </div>
+                          {lang.level === "native" ? (
+                            <span className="text-xs" style={{ color: DOC.muted }}>
+                              Język ojczysty
+                            </span>
+                          ) : (
+                            <>
+                              <LanguageBars filled={LanguageLevelBars[lang.level]} />
+                              <span className="text-xs" style={{ color: DOC.muted }}>
+                                {LanguageLevelLabels[lang.level]}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 bg-white">
+              <div className="px-7 py-8" style={{ backgroundColor: DOC.banner }}>
+                <h1 className="text-3xl font-bold text-white">{user.fullName}</h1>
+                {cv.headline && (
+                  <p
+                    className="mt-2.5 text-sm uppercase tracking-[0.2em]"
+                    style={{ color: DOC.bannerRoleText }}
+                  >
+                    {cv.headline}
+                  </p>
+                )}
+              </div>
+              <div className="h-1.5" style={{ backgroundColor: DOC.bannerAccent }} />
+
+              <div className="flex flex-col gap-6 px-7 py-7">
+                {cv.summary && (
+                  <section>
+                    <h2 className="mb-2.5 text-sm font-bold uppercase tracking-widest" style={{ color: DOC.heading }}>
+                      Podsumowanie
+                    </h2>
+                    <p className="text-sm leading-relaxed">{cv.summary}</p>
+                  </section>
+                )}
+
+                {cv.experience.length > 0 && (
+                  <section>
+                    <h2 className="mb-3 text-sm font-bold uppercase tracking-widest" style={{ color: DOC.heading }}>
+                      Doświadczenie
+                    </h2>
+                    <div className="flex flex-col gap-4">
+                      {cv.experience.map((item, i) => (
+                        <div key={i}>
+                          <p className="text-sm font-bold">
+                            <span className="uppercase">{item.position}</span>,{" "}
+                            <span style={{ color: DOC.muted }}>{item.period}</span>
+                          </p>
+                          <p className="mb-1.5 text-sm font-bold" style={{ color: DOC.accent }}>
+                            {item.company}
+                          </p>
+                          {item.highlights.length > 0 && (
+                            <ul className="flex flex-col gap-1 text-sm leading-relaxed">
+                              {item.highlights.map((h, j) => (
+                                <li key={j}>• {h}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {cv.education.length > 0 && (
+                  <section>
+                    <h2 className="mb-3 text-sm font-bold uppercase tracking-widest" style={{ color: DOC.heading }}>
+                      Wykształcenie
+                    </h2>
+                    <div className="flex flex-col gap-3">
+                      {cv.education.map((item, i) => (
+                        <div key={i}>
+                          <p className="text-sm font-bold">
+                            {item.degree}, <span style={{ color: DOC.muted }}>{item.period}</span>
+                          </p>
+                          <p className="text-sm font-bold" style={{ color: DOC.accent }}>
+                            {item.school}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                <p className="text-xs leading-relaxed" style={{ color: DOC.muted }}>
+                  {CONSENT_TEXT}
+                </p>
+              </div>
+            </div>
           </div>
         </article>
       </main>

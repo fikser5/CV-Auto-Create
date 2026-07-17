@@ -1,86 +1,350 @@
 import Link from "next/link";
-import { buttonPrimary, buttonSecondary } from "@/lib/ui";
+import { buttonPrimary, buttonSecondary, badge, eyebrow } from "@/lib/ui";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
+import {
+  SparklesIcon,
+  ShieldCheckIcon,
+  TargetIcon,
+  FileTextIcon,
+  ClockIcon,
+  LayersIcon,
+  ArrowRightIcon,
+  CheckCircleIcon,
+  ChevronDownIcon,
+  WandIcon,
+} from "@/app/components/icons";
+
+const trustItems = [
+  "Zero zmyślania — tylko Twoje prawdziwe dane",
+  "Gotowy PDF w kilkanaście sekund",
+  "Jeden profil, dowolna liczba ofert",
+];
 
 const steps = [
   {
-    n: "1",
-    title: "Profil",
-    body: "Wpisz doświadczenie, edukację, umiejętności i zainteresowania — raz.",
+    n: "01",
+    icon: FileTextIcon,
+    title: "Zbuduj profil",
+    body: "Wpisz doświadczenie, edukację, umiejętności i zainteresowania — raz, a system zapamięta je na przyszłość.",
   },
   {
-    n: "2",
-    title: "Oferta",
-    body: "Wklej treść ogłoszenia, na które chcesz aplikować.",
+    n: "02",
+    icon: TargetIcon,
+    title: "Wklej ofertę",
+    body: "Skopiuj treść ogłoszenia, na które aplikujesz. AI przeanalizuje wymagania i słowa kluczowe.",
   },
   {
-    n: "3",
-    title: "CV",
-    body: "Pobierz gotowe, dopasowane CV w PDF w kilkanaście sekund.",
+    n: "03",
+    icon: WandIcon,
+    title: "Odbierz CV",
+    body: "W kilkanaście sekund dostajesz CV, w którym najmocniej wybrzmiewa to, co pasuje do danej oferty.",
+  },
+];
+
+const features = [
+  {
+    icon: ShieldCheckIcon,
+    title: "Bez zmyślania",
+    body: "AI nigdy nie dopisuje doświadczenia, którego nie masz — tylko przeformułowuje i priorytetyzuje prawdziwe dane z Twojego profilu.",
+    big: true,
+  },
+  {
+    icon: TargetIcon,
+    title: "Dopasowanie do oferty",
+    body: "Każde CV jest budowane pod konkretne wymagania i słowa kluczowe z ogłoszenia.",
+  },
+  {
+    icon: LayersIcon,
+    title: "Jeden profil, wiele CV",
+    body: "Aplikuj na dziesiątki ofert bez przepisywania CV od zera za każdym razem.",
+  },
+  {
+    icon: ClockIcon,
+    title: "Kilkanaście sekund",
+    body: "Od wklejenia ogłoszenia do gotowego dokumentu — bez czekania i bez formatowania ręcznego.",
+  },
+  {
+    icon: FileTextIcon,
+    title: "Gotowy PDF",
+    body: "Estetyczny, czytelny układ gotowy do wysłania — z poprawną obsługą polskich znaków.",
+  },
+];
+
+const faq = [
+  {
+    q: "Czy AI wymyśla mi doświadczenie, którego nie mam?",
+    a: "Nie. Model pracuje wyłącznie na danych z Twojego profilu — dobiera, przeformułowuje i podkreśla to, co już masz, żeby lepiej odpowiadało ofercie. Nigdy nie dodaje nowych faktów.",
+  },
+  {
+    q: "Ile CV mogę wygenerować?",
+    a: "Tyle, ile potrzebujesz — dla każdej oferty osobno, na bazie tego samego profilu zawodowego.",
+  },
+  {
+    q: "Jakie dane muszę uzupełnić, żeby zacząć?",
+    a: "Podstawowe informacje o sobie, doświadczenie zawodowe, edukację, umiejętności i zainteresowania. Uzupełniasz je raz w profilu.",
+  },
+  {
+    q: "Czy moje dane są bezpieczne?",
+    a: "Tak — dane trafiają wyłącznie do Twojego konta i są wykorzystywane tylko do generowania Twoich CV.",
   },
 ];
 
 export default function Home() {
   return (
-    <div className="flex flex-1 flex-col">
-      <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-6">
-        <span className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
+    <div className="flex flex-1 flex-col overflow-x-clip">
+      <header className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-4 py-6 sm:px-6">
+        <span className="flex shrink-0 items-center gap-2">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-brand text-sm font-bold text-primary-foreground">
             C
           </span>
-          <span className="font-semibold">CVAutomat</span>
+          <span className="hidden font-semibold sm:inline">CVAutomat</span>
         </span>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <ThemeToggle />
-          <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+          <Link
+            href="/login"
+            className="whitespace-nowrap text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
             Zaloguj się
           </Link>
-          <Link href="/register" className={buttonPrimary}>
+          <Link href="/register" className={`${buttonPrimary} whitespace-nowrap`}>
             Załóż konto
           </Link>
         </div>
       </header>
 
-      <main className="relative flex flex-1 flex-col items-center px-6 pb-24 pt-16 text-center">
+      {/* Hero */}
+      <main className="relative flex flex-1 flex-col items-center px-6 pb-24">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[32rem] bg-[radial-gradient(ellipse_60%_50%_at_50%_-10%,var(--accent-soft),transparent)]"
+          className="pointer-events-none absolute inset-x-0 top-[-6rem] -z-10 h-[38rem] bg-[radial-gradient(ellipse_55%_45%_at_20%_10%,var(--accent-soft),transparent),radial-gradient(ellipse_40%_35%_at_85%_5%,var(--rose-soft),transparent)]"
         />
 
-        <span className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
-          Generator CV oparty na AI
-        </span>
+        <div className="grid w-full max-w-6xl grid-cols-1 items-center gap-16 pt-16 lg:grid-cols-[1.05fr_0.95fr] lg:pt-24">
+          <div className="flex flex-col items-start text-left">
+            <span className={badge}>
+              <SparklesIcon className="h-3.5 w-3.5 text-primary" />
+              Generator CV oparty na AI
+            </span>
 
-        <h1 className="mt-6 max-w-2xl text-4xl font-bold tracking-tight sm:text-5xl">
-          CV dopasowane do oferty pracy, wygenerowane w{" "}
-          <span className="text-primary">kilkanaście sekund</span>
-        </h1>
-        <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-          Uzupełnij swój profil zawodowy raz. Wklej treść ogłoszenia, a AI podkreśli te
-          doświadczenia i umiejętności, które najlepiej pasują do danej oferty — bez zmyślania,
-          tylko na podstawie Twoich prawdziwych danych.
-        </p>
-        <div className="mt-10 flex gap-4">
-          <Link href="/register" className={`${buttonPrimary} px-6 py-3 text-base`}>
-            Załóż darmowe konto
-          </Link>
-          <Link href="/login" className={`${buttonSecondary} px-6 py-3 text-base`}>
-            Zaloguj się
-          </Link>
-        </div>
+            <h1 className="mt-6 max-w-xl text-4xl font-bold tracking-tight sm:text-5xl">
+              Twoje CV, <span className="font-display text-5xl italic font-normal text-gradient sm:text-6xl">precyzyjnie</span>{" "}
+              dopasowane do każdej oferty
+            </h1>
+            <p className="mt-6 max-w-lg text-lg text-muted-foreground">
+              Uzupełnij profil zawodowy raz. Wklej treść ogłoszenia, a AI podkreśli te
+              doświadczenia i umiejętności, które najlepiej pasują do danej roli — bez zmyślania,
+              wyłącznie na podstawie Twoich prawdziwych danych.
+            </p>
 
-        <div className="mt-24 grid w-full max-w-3xl grid-cols-1 gap-6 text-left sm:grid-cols-3">
-          {steps.map((step) => (
-            <div key={step.n} className="rounded-card border border-border bg-card p-6">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-soft text-sm font-semibold text-accent-soft-foreground">
-                {step.n}
-              </span>
-              <h2 className="mt-4 font-semibold">{step.title}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">{step.body}</p>
+            <div className="mt-10 flex flex-wrap gap-4">
+              <Link href="/register" className={`${buttonPrimary} px-6 py-3 text-base`}>
+                Załóż darmowe konto
+                <ArrowRightIcon />
+              </Link>
+              <Link href="/login" className={`${buttonSecondary} px-6 py-3 text-base`}>
+                Zaloguj się
+              </Link>
             </div>
-          ))}
+
+            <ul className="mt-10 flex flex-col gap-2.5">
+              {trustItems.map((item) => (
+                <li key={item} className="flex items-center gap-2.5 text-sm text-muted-foreground">
+                  <CheckCircleIcon className="h-4 w-4 shrink-0 text-primary" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Mockup CV preview */}
+          <div className="relative mx-auto w-full max-w-sm lg:mx-0">
+            <div
+              aria-hidden
+              className="absolute -inset-6 -z-10 rounded-[2rem] bg-[radial-gradient(ellipse_70%_70%_at_50%_50%,var(--glow),transparent)]"
+            />
+            <div className="card-hover overflow-hidden rounded-card border border-border bg-card shadow-xl">
+              <div className="h-2.5 bg-gradient-brand" />
+              <div className="flex flex-col gap-4 p-6">
+                <div className="flex items-center gap-3">
+                  <span className="h-10 w-10 shrink-0 rounded-full bg-gradient-brand" />
+                  <div className="flex flex-1 flex-col gap-1.5">
+                    <span className="h-3 w-28 rounded bg-foreground/15" />
+                    <span className="h-2.5 w-20 rounded bg-foreground/10" />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <span className="h-2.5 w-full rounded bg-foreground/10" />
+                  <span className="h-2.5 w-11/12 rounded bg-foreground/10" />
+                  <span className="h-2.5 w-4/5 rounded bg-foreground/10" />
+                </div>
+                <div className="mt-1 flex flex-col gap-2 border-t border-border pt-4">
+                  <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-muted-foreground">
+                    Doświadczenie
+                  </span>
+                  <div className="flex flex-col gap-1.5">
+                    <span className="h-2.5 w-3/4 rounded bg-foreground/10" />
+                    <span className="h-2.5 w-1/2 rounded bg-foreground/10" />
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-1.5 border-t border-border pt-4">
+                  {["React", "TypeScript", "Figma"].map((s) => (
+                    <span key={s} className="rounded-full bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent-soft-foreground">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="glow-primary absolute -bottom-5 -left-5 flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-xs font-semibold shadow-lg sm:-left-8">
+              <TargetIcon className="h-4 w-4 text-rose" />
+              97% dopasowania do oferty
+            </div>
+          </div>
         </div>
+
+        {/* Jak to działa */}
+        <section className="mt-32 w-full max-w-5xl">
+          <div className="flex flex-col items-center text-center">
+            <span className={eyebrow}>Jak to działa</span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight">Od profilu do gotowego CV w trzech krokach</h2>
+          </div>
+
+          <div className="relative mt-14 grid grid-cols-1 gap-6 sm:grid-cols-3">
+            <div
+              aria-hidden
+              className="absolute top-9 left-[16.5%] right-[16.5%] hidden h-px bg-[linear-gradient(90deg,var(--primary),var(--rose))] opacity-30 sm:block"
+            />
+            {steps.map((step) => {
+              const Icon = step.icon;
+              return (
+                <div key={step.n} className="card-hover relative flex flex-col items-start rounded-card border border-border bg-card p-6 text-left">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-brand text-primary-foreground">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <span className="font-display text-3xl italic text-muted-foreground/50">{step.n}</span>
+                  </div>
+                  <h3 className="mt-4 font-semibold">{step.title}</h3>
+                  <p className="mt-1.5 text-sm text-muted-foreground">{step.body}</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Features bento */}
+        <section className="mt-32 w-full max-w-5xl">
+          <div className="flex flex-col items-center text-center">
+            <span className={eyebrow}>Dlaczego CVAutomat</span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight">Zbudowany wokół jednej zasady: prawda przede wszystkim</h2>
+          </div>
+
+          <div className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {features.map((feature) => {
+              const Icon = feature.icon;
+              return (
+                <div
+                  key={feature.title}
+                  className={`card-hover flex flex-col gap-3 rounded-card border border-border bg-card p-6 ${
+                    feature.big ? "sm:col-span-2 lg:col-span-1 lg:row-span-2 lg:justify-center bg-[linear-gradient(155deg,var(--accent-soft),var(--card)_55%)]" : ""
+                  }`}
+                >
+                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-soft text-accent-soft-foreground">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <h3 className="font-semibold">{feature.title}</h3>
+                  <p className="text-sm text-muted-foreground">{feature.body}</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Dopasowanie, nie zmyślanie — porównanie */}
+        <section className="mt-32 w-full max-w-4xl">
+          <div className="flex flex-col items-center text-center">
+            <span className={eyebrow}>Uczciwe CV</span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight">Przeformułowanie, nie fabrykacja</h2>
+            <p className="mt-3 max-w-xl text-muted-foreground">
+              AI zmienia sposób opisania Twojego doświadczenia, nie jego treść. Zobacz różnicę.
+            </p>
+          </div>
+
+          <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div className="rounded-card border border-border bg-card p-6">
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                W Twoim profilu
+              </span>
+              <p className="mt-3 text-sm leading-relaxed">
+                „Zajmowałem się stroną frontendową aplikacji, poprawiałem wydajność i
+                współpracowałem z zespołem projektowym.”
+              </p>
+            </div>
+            <div className="rounded-card border border-primary/30 bg-accent-soft p-6">
+              <span className="text-xs font-semibold uppercase tracking-wide text-accent-soft-foreground">
+                W CV dopasowanym do oferty „Frontend Developer”
+              </span>
+              <p className="mt-3 text-sm leading-relaxed text-accent-soft-foreground">
+                „Odpowiadałem za rozwój warstwy frontendowej aplikacji, optymalizację wydajności
+                interfejsu oraz ścisłą współpracę z zespołem UX/UI.”
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section className="mt-32 w-full max-w-2xl">
+          <div className="flex flex-col items-center text-center">
+            <span className={eyebrow}>FAQ</span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight">Najczęstsze pytania</h2>
+          </div>
+
+          <div className="mt-10 flex flex-col divide-y divide-border rounded-card border border-border bg-card">
+            {faq.map((item) => (
+              <details key={item.q} className="group p-5">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium marker:content-none">
+                  {item.q}
+                  <ChevronDownIcon className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+                </summary>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        {/* Final CTA */}
+        <section className="relative mt-32 w-full max-w-5xl overflow-hidden rounded-card bg-gradient-brand px-8 py-14 text-center text-primary-foreground sm:px-16">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,rgba(255,255,255,0.5)_1px,transparent_1px)] opacity-10 [background-size:22px_22px]"
+          />
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Gotowy na CV, które trafia w sedno?</h2>
+          <p className="mx-auto mt-4 max-w-md text-primary-foreground/85">
+            Załóż konto, uzupełnij profil raz i generuj dopasowane CV do każdej kolejnej oferty.
+          </p>
+          <Link
+            href="/register"
+            className="mt-8 inline-flex items-center gap-1.5 rounded-lg bg-background px-6 py-3 text-base font-semibold text-foreground shadow-lg transition-transform hover:-translate-y-0.5"
+          >
+            Załóż darmowe konto
+            <ArrowRightIcon />
+          </Link>
+        </section>
       </main>
+
+      <footer className="border-t border-border px-6 py-10">
+        <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-4 text-sm text-muted-foreground sm:flex-row">
+          <span className="flex items-center gap-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-brand text-xs font-bold text-primary-foreground">
+              C
+            </span>
+            CVAutomat — CV dopasowane do oferty, nie zmyślone od zera.
+          </span>
+          <span>© 2026 CVAutomat</span>
+        </div>
+      </footer>
     </div>
   );
 }
