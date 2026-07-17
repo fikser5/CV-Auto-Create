@@ -33,7 +33,12 @@ export function ThemeToggle() {
     const next: Theme = theme === "dark" ? "light" : "dark";
     setTheme(next);
     document.documentElement.setAttribute("data-theme", next);
-    localStorage.setItem("theme", next);
+    try {
+      localStorage.setItem("theme", next);
+    } catch {
+      // localStorage can throw in private-browsing / restricted-storage modes —
+      // the attribute above still applies for the current page view either way.
+    }
   }
 
   return (
@@ -42,7 +47,7 @@ export function ThemeToggle() {
       onClick={toggle}
       aria-label={theme === "dark" ? "Przełącz na jasny motyw" : "Przełącz na ciemny motyw"}
       title={theme === "dark" ? "Jasny motyw" : "Ciemny motyw"}
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition-colors hover:text-foreground print:hidden"
+      className="flex h-10 w-10 shrink-0 touch-manipulation select-none items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition-colors hover:text-foreground active:scale-95 print:hidden"
     >
       {theme === "dark" ? <SunIcon /> : <MoonIcon />}
     </button>

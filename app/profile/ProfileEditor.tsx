@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import type { SkillLevels, LanguageLevels } from "@/lib/definitions";
 import { LanguageLevelLabels, LanguageLevelBars } from "@/lib/definitions";
 import { input, buttonPrimary, buttonSecondary, errorText, card, tag } from "@/lib/ui";
@@ -12,6 +12,7 @@ import {
   HeartIcon,
   GlobeIcon,
   CameraIcon,
+  CheckCircleIcon,
 } from "@/app/components/icons";
 
 type SkillLevel = (typeof SkillLevels)[number];
@@ -84,6 +85,82 @@ function formatDateDisplay(value: string): string {
   return new Date(value).toLocaleDateString("pl-PL");
 }
 
+const PHOTO_MAX_DIMENSION = 1200;
+const PHOTO_JPEG_QUALITY = 0.85;
+
+async function decodeImageFile(file: File): Promise<ImageBitmap | HTMLImageElement> {
+  if (typeof createImageBitmap === "function") {
+    try {
+      return await createImageBitmap(file);
+    } catch {
+      // Some browsers' createImageBitmap can't decode certain source formats —
+      // fall back to a plain <img>, which uses the OS/engine's native image
+      // decoder (e.g. Safari can display HEIC in an <img> even where
+      // createImageBitmap rejects it).
+    }
+  }
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    return await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Nie udało się odczytać zdjęcia. Wybierz inny plik."));
+      img.src = objectUrl;
+    });
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
+// Decodes and re-encodes any picked photo as a downsized JPEG, rather than
+// trusting the original file's MIME type/size — phones commonly hand over
+// HEIC photos (or report an unexpected MIME type depending on how the native
+// picker was invoked), which react-pdf cannot render.
+async function photoFileToJpegDataUrl(file: File): Promise<string> {
+  const image = await decodeImageFile(file);
+  const width = "naturalWidth" in image ? image.naturalWidth : image.width;
+  const height = "naturalHeight" in image ? image.naturalHeight : image.height;
+  if (!width || !height) {
+    throw new Error("Nie udało się odczytać zdjęcia. Wybierz inny plik.");
+  }
+
+  const scale = Math.min(1, PHOTO_MAX_DIMENSION / Math.max(width, height));
+  const targetWidth = Math.round(width * scale);
+  const targetHeight = Math.round(height * scale);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("Ta przeglądarka nie obsługuje przetwarzania zdjęć.");
+  }
+  ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
+  if ("close" in image) image.close();
+
+  const dataUrl = canvas.toDataURL("image/jpeg", PHOTO_JPEG_QUALITY);
+  if (dataUrl.length > MAX_PHOTO_BYTES * 1.4) {
+    throw new Error("Zdjęcie jest za duże, nawet po kompresji. Spróbuj inne.");
+  }
+  return dataUrl;
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
 async function apiRequest(url: string, method: string, body?: unknown) {
   const response = await fetch(url, {
     method,
@@ -112,7 +189,7 @@ export function ProfileEditor({ initialData }: { initialData: InitialData }) {
   const [photoUrl, setPhotoUrl] = useState<string | null>(initialData.photoUrl);
   const [photoPending, setPhotoPending] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
-  const photoInputRef = useRef<HTMLInputElement>(null);
+  const [photoStatus, setPhotoStatus] = useState<string | null>(null);
 
   const [experiences, setExperiences] = useState<Experience[]>(initialData.experiences);
   const [newExperience, setNewExperience] = useState({
@@ -158,26 +235,27 @@ export function ProfileEditor({ initialData }: { initialData: InitialData }) {
     if (!file) return;
 
     setPhotoError(null);
-
-    if (!["image/jpeg", "image/png"].includes(file.type)) {
-      setPhotoError("Zdjęcie musi być w formacie JPG lub PNG.");
-      return;
-    }
-    if (file.size > MAX_PHOTO_BYTES) {
-      setPhotoError("Zdjęcie jest za duże (maks. 3 MB).");
-      return;
-    }
-
+    setPhotoStatus(null);
     setPhotoPending(true);
     try {
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = () => reject(new Error("Nie udało się odczytać pliku."));
-        reader.readAsDataURL(file);
-      });
-      const { photoUrl: saved } = await apiRequest("/api/profile/photo", "POST", { photo: dataUrl });
+      // Decode + re-encode as JPEG client-side rather than trusting file.type/size
+      // directly: phones commonly hand over HEIC photos (or an empty/odd MIME
+      // type depending on how the picker was invoked) which react-pdf can't
+      // render, and this also downsizes huge camera photos before upload.
+      // Wrapped in a timeout so a stalled decode/upload always ends in a visible
+      // error rather than leaving the button stuck on "Wgrywanie…" forever.
+      const dataUrl = await withTimeout(
+        photoFileToJpegDataUrl(file),
+        20000,
+        "Przetwarzanie zdjęcia trwa zbyt długo. Spróbuj ponownie lub wybierz inne zdjęcie.",
+      );
+      const { photoUrl: saved } = await withTimeout(
+        apiRequest("/api/profile/photo", "POST", { photo: dataUrl }),
+        20000,
+        "Wgrywanie zdjęcia trwa zbyt długo. Sprawdź połączenie i spróbuj ponownie.",
+      );
       setPhotoUrl(saved);
+      setPhotoStatus("Zdjęcie zapisane.");
     } catch (error) {
       setPhotoError(error instanceof Error ? error.message : "Błąd wgrywania zdjęcia.");
     } finally {
@@ -188,6 +266,7 @@ export function ProfileEditor({ initialData }: { initialData: InitialData }) {
   async function removePhoto() {
     setPhotoPending(true);
     setPhotoError(null);
+    setPhotoStatus(null);
     try {
       await apiRequest("/api/profile/photo", "DELETE");
       setPhotoUrl(null);
@@ -335,28 +414,45 @@ export function ProfileEditor({ initialData }: { initialData: InitialData }) {
           </div>
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center gap-2">
-              <input
-                ref={photoInputRef}
-                type="file"
-                accept="image/jpeg,image/png"
-                className="hidden"
-                onChange={handlePhotoSelected}
-              />
-              <button
-                type="button"
-                disabled={photoPending}
-                onClick={() => photoInputRef.current?.click()}
-                className={buttonSecondary}
-              >
-                {photoPending ? "Wgrywanie…" : photoUrl ? "Zmień zdjęcie" : "Wgraj zdjęcie"}
-              </button>
+              {/* A real, tappable <input type="file"> laid directly over the visible
+                  button — not display:none triggered via ref.click(), which is
+                  unreliable on mobile Safari (the tap must land on the real input
+                  for the OS file picker to open reliably). */}
+              <div className="relative">
+                <span aria-hidden className={`${buttonSecondary} ${photoPending ? "opacity-50" : ""}`}>
+                  {photoPending ? "Wgrywanie…" : photoUrl ? "Zmień zdjęcie" : "Wgraj zdjęcie"}
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={photoPending}
+                  onChange={handlePhotoSelected}
+                  aria-label="Wgraj zdjęcie profilowe"
+                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+                />
+              </div>
               {photoUrl && (
                 <button type="button" disabled={photoPending} onClick={removePhoto} className={deleteButtonClass}>
                   Usuń
                 </button>
               )}
             </div>
-            <p className="text-xs text-muted-foreground">JPG lub PNG, maks. 3 MB. Użyte w podglądzie i PDF CV.</p>
+            <p className="text-xs text-muted-foreground">
+              Dowolne zdjęcie z telefonu lub komputera — zostanie automatycznie dopasowane. Użyte w podglądzie i PDF
+              CV.
+            </p>
+            {photoPending && (
+              <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                <span className="h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                Przetwarzanie zdjęcia…
+              </p>
+            )}
+            {!photoPending && photoStatus && (
+              <p className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                <CheckCircleIcon className="h-3.5 w-3.5 shrink-0" />
+                {photoStatus}
+              </p>
+            )}
             {photoError && <p className={errorText}>{photoError}</p>}
           </div>
         </div>

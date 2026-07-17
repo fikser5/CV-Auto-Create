@@ -17,21 +17,29 @@ export default function GeneratePage() {
   const [rawContent, setRawContent] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [jobTitle, setJobTitle] = useState("");
+  const [sourceUrl, setSourceUrl] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setPending(true);
     setError(null);
 
+    const hasContent = rawContent.trim().length >= 50;
+    const hasUrl = sourceUrl.trim().length > 0;
+    if (!hasContent && !hasUrl) {
+      setError("Podaj link do oferty albo wklej jej pełną treść (co najmniej 50 znaków).");
+      return;
+    }
+
+    setPending(true);
     try {
-      setStatusMessage("Zapisywanie oferty…");
+      setStatusMessage(hasContent ? "Zapisywanie oferty…" : "Pobieranie treści oferty spod linku…");
       const jobPostingResponse = await fetch("/api/job-postings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rawContent, companyName, jobTitle }),
+        body: JSON.stringify({ rawContent, companyName, jobTitle, sourceUrl }),
       });
       const jobPostingData = await jobPostingResponse.json();
       if (!jobPostingResponse.ok) {
@@ -51,11 +59,15 @@ export default function GeneratePage() {
         throw new Error(generateData?.error || "Nie udało się wygenerować CV.");
       }
 
+      setStatusMessage("Gotowe! Otwieram podgląd CV…");
+      // Brief pause so the "done" state is actually visible before navigating —
+      // otherwise the loading screen disappears and the new page appears in the
+      // same instant, which on a phone reads as "nothing happened".
+      await new Promise((resolve) => setTimeout(resolve, 600));
       router.push(`/cv/${generateData.generatedCv.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Wystąpił nieoczekiwany błąd.");
       setStatusMessage(null);
-    } finally {
       setPending(false);
     }
   }
@@ -63,6 +75,22 @@ export default function GeneratePage() {
   return (
     <>
       <AppNav />
+
+      {pending && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/85 px-6 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-5 rounded-card border border-border bg-card px-10 py-12 text-center shadow-xl">
+            <span
+              aria-hidden
+              className="h-12 w-12 shrink-0 animate-spin rounded-full border-4 border-primary border-t-transparent"
+            />
+            <div>
+              <p className="text-lg font-semibold">{statusMessage ?? "Przetwarzanie…"}</p>
+              <p className="mt-1.5 text-sm text-muted-foreground">Nie zamykaj tej strony.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <main className="mx-auto grid w-full max-w-4xl flex-1 grid-cols-1 gap-8 px-6 py-12 lg:grid-cols-[1fr_15rem]">
         <div className="flex flex-col gap-6">
           <div>
@@ -89,19 +117,33 @@ export default function GeneratePage() {
                 onChange={(e) => setJobTitle(e.target.value)}
               />
             </div>
-            <textarea
-              className={input}
-              placeholder="Wklej pełną treść ogłoszenia o pracę…"
-              rows={12}
-              required
-              minLength={50}
-              value={rawContent}
-              onChange={(e) => setRawContent(e.target.value)}
-            />
+            <div className="flex flex-col gap-1">
+              <input
+                className={input}
+                type="url"
+                placeholder="Link do oferty"
+                value={sourceUrl}
+                onChange={(e) => setSourceUrl(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Wystarczy sam link — treść oferty pobierzemy automatycznie. Jeśli strona tego nie
+                pozwoli (np. wymaga logowania), wklej treść ręcznie poniżej.
+              </p>
+            </div>
+            <div className="flex flex-col gap-1">
+              <textarea
+                className={input}
+                placeholder="…albo wklej tu pełną treść ogłoszenia o pracę"
+                rows={12}
+                value={rawContent}
+                onChange={(e) => setRawContent(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Opcjonalne, jeśli podałeś link wyżej — ale najpewniejsze: wklejona treść zawsze
+                działa, nawet gdy automatyczne pobranie ze strony się nie uda.
+              </p>
+            </div>
 
-            {statusMessage && !error && (
-              <p className="text-sm text-muted-foreground">{statusMessage}</p>
-            )}
             {error && <p className={errorText}>{error}</p>}
 
             <button type="submit" disabled={pending} className={`${buttonPrimary} w-full`}>

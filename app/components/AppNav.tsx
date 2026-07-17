@@ -9,6 +9,7 @@ const links = [
   { href: "/dashboard", label: "Panel" },
   { href: "/profile", label: "Profil" },
   { href: "/generate", label: "Generuj CV" },
+  { href: "/cv", label: "Historia CV" },
 ];
 
 export function AppNav() {

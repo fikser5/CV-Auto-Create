@@ -94,17 +94,28 @@ export default async function DashboardPage() {
                   : "Wklej ogłoszenie o pracę, a AI dopasuje Twoje CV do jego wymagań."}
               </p>
             </div>
-            <Link
-              href="/generate"
-              className={`inline-flex w-fit items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                profileReady
-                  ? "bg-gradient-brand text-primary-foreground hover:brightness-110"
-                  : "cursor-not-allowed bg-border text-muted-foreground"
-              }`}
-            >
-              Generuj CV
-              <ArrowRightIcon />
-            </Link>
+            <div className="flex items-center gap-4">
+              <Link
+                href="/generate"
+                className={`inline-flex w-fit items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                  profileReady
+                    ? "bg-gradient-brand text-primary-foreground hover:brightness-110"
+                    : "cursor-not-allowed bg-border text-muted-foreground"
+                }`}
+              >
+                Generuj CV
+                <ArrowRightIcon />
+              </Link>
+              {cvCount > 0 && (
+                <Link
+                  href="/cv"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+                >
+                  Zobacz historię
+                  <ArrowRightIcon />
+                </Link>
+              )}
+            </div>
           </div>
         </div>
 
