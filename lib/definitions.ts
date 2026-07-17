@@ -1,13 +1,15 @@
 import * as z from "zod";
 
+const PasswordSchema = z
+  .string()
+  .min(8, { error: "Hasło musi mieć co najmniej 8 znaków." })
+  .regex(/[a-zA-Z]/, { error: "Hasło musi zawierać co najmniej jedną literę." })
+  .regex(/[0-9]/, { error: "Hasło musi zawierać co najmniej jedną cyfrę." });
+
 export const RegisterFormSchema = z.object({
   fullName: z.string().min(2, { error: "Imię i nazwisko musi mieć co najmniej 2 znaki." }).trim(),
   email: z.email({ error: "Podaj poprawny adres e-mail." }).trim(),
-  password: z
-    .string()
-    .min(8, { error: "Hasło musi mieć co najmniej 8 znaków." })
-    .regex(/[a-zA-Z]/, { error: "Hasło musi zawierać co najmniej jedną literę." })
-    .regex(/[0-9]/, { error: "Hasło musi zawierać co najmniej jedną cyfrę." }),
+  password: PasswordSchema,
 });
 
 export type RegisterFormState =
@@ -17,6 +19,24 @@ export type RegisterFormState =
         email?: string[];
         password?: string[];
       };
+      message?: string;
+    }
+  | undefined;
+
+export const ForgotPasswordSchema = z.object({
+  email: z.email({ error: "Podaj poprawny adres e-mail." }).trim(),
+});
+
+export type ForgotPasswordState = { message?: string; sent?: boolean } | undefined;
+
+export const ResetPasswordSchema = z.object({
+  token: z.string().min(1),
+  password: PasswordSchema,
+});
+
+export type ResetPasswordState =
+  | {
+      errors?: { password?: string[] };
       message?: string;
     }
   | undefined;
@@ -110,13 +130,17 @@ export const PhotoUploadSchema = z.object({
     ),
 });
 
-export const JobPostingSchema = z.object({
-  rawContent: z
-    .string()
-    .trim()
-    .min(50, { error: "Wklej pełną treść ogłoszenia (co najmniej 50 znaków)." })
-    .max(20000),
-  sourceUrl: z.union([z.url(), z.literal("")]).optional(),
-  companyName: z.string().trim().max(200).optional().or(z.literal("")),
-  jobTitle: z.string().trim().max(200).optional().or(z.literal("")),
-});
+export const JobPostingSchema = z
+  .object({
+    // Either rawContent (min 50 chars) or sourceUrl must be present — enforced
+    // below via .refine(), since either one alone is a valid way to submit an
+    // offer (a bare link gets its content fetched server-side).
+    rawContent: z.string().trim().max(20000).optional().or(z.literal("")),
+    sourceUrl: z.union([z.url(), z.literal("")]).optional(),
+    companyName: z.string().trim().max(200).optional().or(z.literal("")),
+    jobTitle: z.string().trim().max(200).optional().or(z.literal("")),
+  })
+  .refine((data) => (data.rawContent?.trim().length ?? 0) >= 50 || !!data.sourceUrl?.trim(), {
+    error: "Podaj link do oferty albo wklej pełną treść ogłoszenia (co najmniej 50 znaków).",
+    path: ["rawContent"],
+  });
