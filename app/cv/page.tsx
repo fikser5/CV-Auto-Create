@@ -3,10 +3,17 @@ import { verifySession } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { AppNav } from "@/app/components/AppNav";
 import { buttonPrimary, eyebrow } from "@/lib/ui";
+import { GeneratedCvContentSchema } from "@/lib/cv-schema";
 import { FileTextIcon, ArrowRightIcon, ExternalLinkIcon } from "@/app/components/icons";
 
 function formatDate(date: Date): string {
   return date.toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric" });
+}
+
+function getMatchScore(contentJson: unknown): number | null {
+  const parsed = GeneratedCvContentSchema.safeParse(contentJson);
+  if (!parsed.success || !parsed.data.matchSummary) return null;
+  return parsed.data.matchScore;
 }
 
 export default async function CvHistoryPage() {
@@ -46,46 +53,56 @@ export default async function CvHistoryPage() {
           </div>
         ) : (
           <ul className="flex flex-col gap-3">
-            {generatedCvs.map((cv) => (
-              <li key={cv.id} className="card-hover rounded-card border border-border bg-card p-5">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-start gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-soft-foreground">
-                      <FileTextIcon className="h-5 w-5" />
-                    </span>
-                    <div>
-                      <p className="font-semibold">
-                        {cv.jobPosting.jobTitle || "CV bez podanego stanowiska"}
-                        {cv.jobPosting.companyName ? ` @ ${cv.jobPosting.companyName}` : ""}
-                      </p>
-                      <p className="mt-0.5 text-sm text-muted-foreground">
-                        Wygenerowano {formatDate(cv.createdAt)}
-                        {cv.jobPosting.sourceUrl && (
-                          <>
-                            {" · "}
-                            <a
-                              href={cv.jobPosting.sourceUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-primary hover:text-primary-hover"
-                            >
-                              Oferta <ExternalLinkIcon className="h-3 w-3" />
-                            </a>
-                          </>
-                        )}
-                      </p>
+            {generatedCvs.map((cv) => {
+              const matchScore = getMatchScore(cv.contentJson);
+              return (
+                <li key={cv.id} className="card-hover rounded-card border border-border bg-card p-5">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-start gap-3">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-soft-foreground">
+                        <FileTextIcon className="h-5 w-5" />
+                      </span>
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-semibold">
+                            {cv.jobPosting.jobTitle || "CV bez podanego stanowiska"}
+                            {cv.jobPosting.companyName ? ` @ ${cv.jobPosting.companyName}` : ""}
+                          </p>
+                          {matchScore !== null && (
+                            <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs font-semibold text-accent-soft-foreground">
+                              {matchScore}% dopasowania
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-0.5 text-sm text-muted-foreground">
+                          Wygenerowano {formatDate(cv.createdAt)}
+                          {cv.jobPosting.sourceUrl && (
+                            <>
+                              {" · "}
+                              <a
+                                href={cv.jobPosting.sourceUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-primary hover:text-primary-hover"
+                              >
+                                Oferta <ExternalLinkIcon className="h-3 w-3" />
+                              </a>
+                            </>
+                          )}
+                        </p>
+                      </div>
                     </div>
+                    <Link
+                      href={`/cv/${cv.id}`}
+                      className="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-primary hover:text-primary-hover"
+                    >
+                      Zobacz CV
+                      <ArrowRightIcon />
+                    </Link>
                   </div>
-                  <Link
-                    href={`/cv/${cv.id}`}
-                    className="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-primary hover:text-primary-hover"
-                  >
-                    Zobacz CV
-                    <ArrowRightIcon />
-                  </Link>
-                </div>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </main>

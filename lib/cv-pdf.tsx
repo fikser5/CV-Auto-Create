@@ -100,6 +100,20 @@ const styles = StyleSheet.create({
   skillDot: { width: 3, height: 3, borderRadius: 1.5, backgroundColor: COLORS.accent, marginRight: 6, marginTop: 4 },
   skillText: { flex: 1, fontSize: 8.6 },
 
+  softSkillsWrap: { flexDirection: "row", flexWrap: "wrap" },
+  softSkillChip: {
+    fontSize: 8,
+    color: COLORS.heading,
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: COLORS.accent,
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2.5,
+    marginRight: 4,
+    marginBottom: 4,
+  },
+
   languageBlock: { marginBottom: 11 },
   languageTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "baseline" },
   languageName: { fontSize: 8.9, fontWeight: 700 },
@@ -198,6 +212,19 @@ function CvDocument({ cv }: { cv: CvRenderData }) {
                       <Text style={styles.skillText}>{skill}</Text>
                     </View>
                   ))}
+                </View>
+              )}
+
+              {cv.softSkills.length > 0 && (
+                <View>
+                  <Text style={styles.sidebarHeading}>Umiejętności miękkie</Text>
+                  <View style={styles.softSkillsWrap}>
+                    {cv.softSkills.map((skill, i) => (
+                      <Text key={i} style={styles.softSkillChip}>
+                        {skill}
+                      </Text>
+                    ))}
+                  </View>
                 </View>
               )}
 

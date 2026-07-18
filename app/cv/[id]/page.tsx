@@ -49,6 +49,40 @@ function LanguageBars({ filled }: { filled: number }) {
   );
 }
 
+// App-chrome only — never rendered on the CV document itself (a score badge
+// doesn't belong on a resume sent to an employer), so this uses the app's own
+// violet/rose branding rather than the fixed DOC palette above.
+function MatchScoreRing({ score }: { score: number }) {
+  const radius = 28;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference * (1 - Math.min(100, Math.max(0, score)) / 100);
+  return (
+    <div className="relative flex h-16 w-16 shrink-0 items-center justify-center">
+      <svg viewBox="0 0 64 64" className="absolute inset-0 -rotate-90">
+        <defs>
+          <linearGradient id="matchScoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style={{ stopColor: "var(--primary)" }} />
+            <stop offset="100%" style={{ stopColor: "var(--rose)" }} />
+          </linearGradient>
+        </defs>
+        <circle cx="32" cy="32" r={radius} fill="none" stroke="var(--border)" strokeWidth="6" />
+        <circle
+          cx="32"
+          cy="32"
+          r={radius}
+          fill="none"
+          stroke="url(#matchScoreGradient)"
+          strokeWidth="6"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+        />
+      </svg>
+      <span className="text-sm font-bold text-foreground">{score}%</span>
+    </div>
+  );
+}
+
 export default async function CvPage({ params }: { params: Promise<{ id: string }> }) {
   const { userId } = await verifySession();
   const { id } = await params;
@@ -103,6 +137,16 @@ export default async function CvPage({ params }: { params: Promise<{ id: string 
             </a>
           </div>
         </div>
+
+        {cv.matchSummary && (
+          <div className="flex items-start gap-4 rounded-card border border-border bg-card p-5 print:hidden">
+            <MatchScoreRing score={cv.matchScore} />
+            <div>
+              <p className="text-sm font-semibold">Dopasowanie do oferty</p>
+              <p className="mt-1 text-sm text-muted-foreground">{cv.matchSummary}</p>
+            </div>
+          </div>
+        )}
 
         <article
           className="glow-primary overflow-hidden rounded-card border border-border shadow-sm print:border-none print:shadow-none"
@@ -180,6 +224,28 @@ export default async function CvPage({ params }: { params: Promise<{ id: string 
                         </li>
                       ))}
                     </ul>
+                  </div>
+                )}
+
+                {cv.softSkills.length > 0 && (
+                  <div>
+                    <h2
+                      className="mb-3 text-xs font-bold uppercase tracking-widest"
+                      style={{ color: DOC.heading }}
+                    >
+                      Umiejętności miękkie
+                    </h2>
+                    <div className="flex flex-wrap gap-1.5">
+                      {cv.softSkills.map((skill, i) => (
+                        <span
+                          key={i}
+                          className="rounded-full border bg-white px-2 py-1 text-xs"
+                          style={{ borderColor: DOC.accent, color: DOC.heading }}
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 )}
 

@@ -22,7 +22,30 @@ export const GeneratedCvContentSchema = z.object({
   ),
   skills: z
     .array(z.string())
-    .describe("Umiejętności z profilu, posortowane od najbardziej istotnych dla tej oferty"),
+    .describe("Umiejętności twarde z profilu, posortowane od najbardziej istotnych dla tej oferty"),
+  softSkills: z
+    .array(z.string())
+    .describe(
+      "Umiejętności miękkie (np. przywództwo, komunikacja, praca zespołowa) — TYLKO takie, które wprost wynikają z opisów doświadczenia/podsumowania w profilu (np. 'zarządzanie zespołem' w opisie stanowiska uzasadnia 'przywództwo'). Nigdy nie wymyślaj cech, których nic w profilu nie potwierdza. Posortowane od najbardziej istotnych dla tej oferty, maksymalnie 6.",
+    )
+    // .default([]) keeps this optional to parse for CVs generated before this
+    // field existed — see lib/claude.ts comment for why it's still effectively
+    // required from the model going forward.
+    .default([]),
+  matchScore: z
+    .number()
+    .min(0)
+    .max(100)
+    .describe(
+      "Szczera ocena 0-100, jak dobrze prawdziwy profil kandydata pokrywa wymagania oferty. Nie zawyżaj — jeśli profilowi brakuje istotnych wymagań, odzwierciedl to w niższej ocenie.",
+    )
+    .default(0),
+  matchSummary: z
+    .string()
+    .describe(
+      "Jedno zwięzłe, szczere zdanie po polsku wyjaśniające ocenę dopasowania — co pasuje najlepiej i, jeśli to istotne, jakich wymagań oferty profil nie pokrywa.",
+    )
+    .default(""),
 });
 
 export type GeneratedCvContent = z.infer<typeof GeneratedCvContentSchema>;

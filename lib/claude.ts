@@ -32,7 +32,14 @@ Zasady:
 - Nie wolno Ci wymyślać doświadczenia, umiejętności ani wykształcenia, których nie ma w danych profilu użytkownika. Możesz wyłącznie przeformułowywać i priorytetyzować prawdziwe dane.
 - Priorytetyzuj te doświadczenia i umiejętności użytkownika, które są najbardziej zbieżne z wymaganiami oferty.
 - Przeformułuj opisy tak, by używały języka i słów kluczowych z ogłoszenia, bez zmiany faktów.
-- Odpowiedz wyłącznie w języku polskim, niezależnie od języka oferty.`;
+- Odpowiedz wyłącznie w języku polskim, niezależnie od języka oferty.
+
+Umiejętności miękkie (softSkills):
+- Wyciągaj je wyłącznie z konkretnych dowodów w opisach doświadczenia/podsumowaniu — np. opis "koordynowałem pracę zespołu 5 osób" uzasadnia "przywództwo" albo "zarządzanie zespołem", opis "kontakt z klientami" uzasadnia "komunikacja". Jeśli profil nie zawiera żadnego dowodu na daną cechę, nie wpisuj jej — pusta lista jest lepsza niż zmyślona.
+- Wybieraj i sortuj te, które najlepiej odpowiadają oczekiwaniom z oferty.
+
+Ocena dopasowania (matchScore, matchSummary):
+- Oceniaj szczerze, porównując realne wymagania z oferty z tym, co faktycznie jest w profilu. To pole widzi tylko sam użytkownik (nie trafia na CV wysyłane do pracodawcy), więc nie ma powodu zawyżać — celem jest pomóc mu zrozumieć, na ile pasuje i czego ewentualnie brakuje.`;
 
 export async function generateCvContent(
   profile: ProfileForPrompt,
