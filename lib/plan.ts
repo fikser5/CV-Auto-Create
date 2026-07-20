@@ -12,6 +12,7 @@ export type PlanUser = {
   freeGenerationUsed: boolean;
   purchasedCredits: number;
   hasEverPurchased: boolean;
+  emailVerifiedAt: Date | null;
 };
 
 export function isPremiumActive(user: PlanUser): boolean {
@@ -26,13 +27,17 @@ export type GenerationAllowance =
   | { allowed: true; source: "premium" }
   | { allowed: true; source: "free" }
   | { allowed: true; source: "credits" }
-  | { allowed: false };
+  | { allowed: false; reason: "email_not_verified" }
+  | { allowed: false; reason: "limit_reached" };
 
 export function checkGenerationAllowance(user: PlanUser): GenerationAllowance {
+  // Checked first, regardless of plan/credits — an unconfirmed email is how
+  // someone would script unlimited disposable-account free generations.
+  if (!user.emailVerifiedAt) return { allowed: false, reason: "email_not_verified" };
   if (isPremiumActive(user)) return { allowed: true, source: "premium" };
   if (!user.freeGenerationUsed) return { allowed: true, source: "free" };
   if (user.purchasedCredits > 0) return { allowed: true, source: "credits" };
-  return { allowed: false };
+  return { allowed: false, reason: "limit_reached" };
 }
 
 // Call once, right after a generation actually succeeds — never before, so a
@@ -50,6 +55,7 @@ export type PlanStatus = {
   isPremiumActive: boolean;
   canGenerate: boolean;
   canViewHistory: boolean;
+  emailVerified: boolean;
   label: string;
   detail: string;
 };
@@ -57,13 +63,15 @@ export type PlanStatus = {
 export function describePlanStatus(user: PlanUser): PlanStatus {
   const premiumActive = isPremiumActive(user);
   const allowance = checkGenerationAllowance(user);
+  const emailVerified = !!user.emailVerifiedAt;
 
   if (premiumActive) {
     const renewsAt = user.planRenewsAt as Date;
     return {
       isPremiumActive: true,
-      canGenerate: true,
+      canGenerate: allowance.allowed,
       canViewHistory: true,
+      emailVerified,
       label: "Premium",
       detail: `Nielimitowane generowanie CV — aktywne do ${renewsAt.toLocaleDateString("pl-PL")}.`,
     };
@@ -72,8 +80,9 @@ export function describePlanStatus(user: PlanUser): PlanStatus {
   if (!user.freeGenerationUsed) {
     return {
       isPremiumActive: false,
-      canGenerate: true,
+      canGenerate: allowance.allowed,
       canViewHistory: canViewHistory(user),
+      emailVerified,
       label: "Plan darmowy",
       detail: "Masz 1 darmowe CV do wygenerowania.",
     };
@@ -82,8 +91,9 @@ export function describePlanStatus(user: PlanUser): PlanStatus {
   if (user.purchasedCredits > 0) {
     return {
       isPremiumActive: false,
-      canGenerate: true,
+      canGenerate: allowance.allowed,
       canViewHistory: true,
+      emailVerified,
       label: "Pakiet",
       detail: `Pozostało ${user.purchasedCredits} ${user.purchasedCredits === 1 ? "wygenerowanie" : "wygenerowania"} CV.`,
     };
@@ -93,6 +103,7 @@ export function describePlanStatus(user: PlanUser): PlanStatus {
     isPremiumActive: false,
     canGenerate: allowance.allowed,
     canViewHistory: canViewHistory(user),
+    emailVerified,
     label: "Plan darmowy",
     detail: "Wykorzystano darmowe CV. Wykup Premium albo pakiet, żeby generować kolejne.",
   };

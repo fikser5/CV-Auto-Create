@@ -14,8 +14,10 @@ import {
   ResetPasswordSchema,
   type ResetPasswordState,
 } from "@/lib/definitions";
-import { sendWelcomeEmail, sendPasswordResetEmail } from "@/lib/email";
+import { sendWelcomeEmail, sendPasswordResetEmail, sendVerificationEmail } from "@/lib/email";
 import { createPasswordResetToken, consumePasswordResetToken } from "@/lib/password-reset";
+import { createEmailVerificationToken } from "@/lib/email-verification";
+import { verifySession } from "@/lib/dal";
 
 async function getBaseUrl(): Promise<string> {
   const h = await headers();
@@ -48,12 +50,14 @@ export async function registerUser(
 
   const passwordHash = await bcrypt.hash(password, 10);
 
-  await prisma.user.create({
+  const user = await prisma.user.create({
     data: { fullName, email, passwordHash },
   });
 
   // Never block registration on email delivery — sendWelcomeEmail swallows its own errors.
-  await sendWelcomeEmail(email, fullName);
+  const token = await createEmailVerificationToken(user.id);
+  const baseUrl = await getBaseUrl();
+  await sendWelcomeEmail(email, fullName, `${baseUrl}/verify-email?token=${token}`);
 
   await signIn("credentials", {
     email,
@@ -138,4 +142,24 @@ export async function resetPassword(
   await prisma.user.update({ where: { id: verified.userId }, data: { passwordHash } });
 
   redirect("/login?reset=success");
+}
+
+export async function resendVerificationEmail(): Promise<void> {
+  const { userId } = await verifySession();
+  const user = await prisma.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: { email: true, fullName: true, emailVerifiedAt: true },
+  });
+
+  if (user.emailVerifiedAt) return;
+
+  const token = await createEmailVerificationToken(userId);
+  const baseUrl = await getBaseUrl();
+  try {
+    await sendVerificationEmail(user.email, user.fullName, `${baseUrl}/verify-email?token=${token}`);
+  } catch (error) {
+    console.error("Nie udało się wysłać e-maila weryfikacyjnego:", error);
+  }
+
+  redirect("/dashboard?verification=sent");
 }

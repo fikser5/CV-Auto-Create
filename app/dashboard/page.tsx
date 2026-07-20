@@ -2,6 +2,7 @@ import Link from "next/link";
 import { verifySession } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { AppNav } from "@/app/components/AppNav";
+import { resendVerificationEmail } from "@/app/actions/auth";
 import { describePlanStatus, PREMIUM_MONTHLY_PRICE_PLN, PACKAGE_PRICE_PLN, PACKAGE_CREDITS } from "@/lib/plan";
 import { buttonPrimary as buttonPrimaryClass, buttonSecondary as buttonSecondaryClass } from "@/lib/ui";
 import {
@@ -11,6 +12,7 @@ import {
   SparklesIcon,
   CrownIcon,
   CheckCircleIcon,
+  MailIcon,
 } from "@/app/components/icons";
 
 function ComingSoonButton({ children, className }: { children: React.ReactNode; className: string }) {
@@ -26,8 +28,13 @@ function ComingSoonButton({ children, className }: { children: React.ReactNode; 
   );
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ verification?: string }>;
+}) {
   const { userId } = await verifySession();
+  const { verification } = await searchParams;
   const [user, profile, cvCount] = await Promise.all([
     prisma.user.findUniqueOrThrow({
       where: { id: userId },
@@ -39,6 +46,7 @@ export default async function DashboardPage() {
         freeGenerationUsed: true,
         purchasedCredits: true,
         hasEverPurchased: true,
+        emailVerifiedAt: true,
       },
     }),
     prisma.profile.findUnique({
@@ -71,6 +79,31 @@ export default async function DashboardPage() {
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">{user.email}</p>
         </div>
+
+        {!planStatus.emailVerified && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-primary/30 bg-accent-soft p-5">
+            <div className="flex items-start gap-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-card text-accent-soft-foreground">
+                <MailIcon className="h-4 w-4" />
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-accent-soft-foreground">
+                  {verification === "sent" ? "Link wysłany ponownie" : "Potwierdź adres e-mail"}
+                </p>
+                <p className="mt-0.5 text-sm text-accent-soft-foreground">
+                  {verification === "sent"
+                    ? "Sprawdź skrzynkę (też SPAM) i kliknij link, żeby odblokować generowanie CV."
+                    : "Sprawdź skrzynkę i kliknij link, żeby móc generować CV."}
+                </p>
+              </div>
+            </div>
+            <form action={resendVerificationEmail}>
+              <button type="submit" className={buttonSecondaryClass}>
+                Wyślij ponownie
+              </button>
+            </form>
+          </div>
+        )}
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="card-hover flex flex-col justify-between gap-5 rounded-card border border-border bg-card p-6">

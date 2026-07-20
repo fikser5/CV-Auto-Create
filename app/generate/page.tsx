@@ -3,21 +3,30 @@ import { verifySession } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { AppNav } from "@/app/components/AppNav";
 import { GenerateForm } from "@/app/generate/GenerateForm";
+import { resendVerificationEmail } from "@/app/actions/auth";
 import { checkGenerationAllowance } from "@/lib/plan";
-import { buttonPrimary, eyebrow } from "@/lib/ui";
-import { LockIcon } from "@/app/components/icons";
+import { buttonPrimary, buttonSecondary, eyebrow } from "@/lib/ui";
+import { LockIcon, MailIcon } from "@/app/components/icons";
 
 export default async function GeneratePage() {
   const { userId } = await verifySession();
 
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { plan: true, planRenewsAt: true, freeGenerationUsed: true, purchasedCredits: true, hasEverPurchased: true },
+    select: {
+      plan: true,
+      planRenewsAt: true,
+      freeGenerationUsed: true,
+      purchasedCredits: true,
+      hasEverPurchased: true,
+      emailVerifiedAt: true,
+    },
   });
 
   const allowance = checkGenerationAllowance(user);
 
   if (!allowance.allowed) {
+    const isEmailIssue = allowance.reason === "email_not_verified";
     return (
       <>
         <AppNav />
@@ -28,18 +37,37 @@ export default async function GeneratePage() {
           </div>
           <div className="flex flex-col items-center gap-4 rounded-card border border-dashed border-border p-12 text-center">
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent-soft-foreground">
-              <LockIcon className="h-6 w-6" />
+              {isEmailIssue ? <MailIcon className="h-6 w-6" /> : <LockIcon className="h-6 w-6" />}
             </span>
-            <div>
-              <p className="font-semibold">Wykorzystano darmowe CV</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Wykup Premium (nielimitowane generowanie) albo pakiet wygenerowań, żeby stworzyć
-                kolejne CV.
-              </p>
-            </div>
-            <Link href="/dashboard#plan" className={buttonPrimary}>
-              Zobacz plany
-            </Link>
+            {isEmailIssue ? (
+              <>
+                <div>
+                  <p className="font-semibold">Potwierdź adres e-mail</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Wysłaliśmy link weryfikacyjny na Twoją skrzynkę podczas rejestracji. Sprawdź
+                    też folder SPAM, albo wyślij link jeszcze raz.
+                  </p>
+                </div>
+                <form action={resendVerificationEmail}>
+                  <button type="submit" className={buttonSecondary}>
+                    Wyślij link ponownie
+                  </button>
+                </form>
+              </>
+            ) : (
+              <>
+                <div>
+                  <p className="font-semibold">Wykorzystano darmowe CV</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Wykup Premium (nielimitowane generowanie) albo pakiet wygenerowań, żeby
+                    stworzyć kolejne CV.
+                  </p>
+                </div>
+                <Link href="/dashboard#plan" className={buttonPrimary}>
+                  Zobacz plany
+                </Link>
+              </>
+            )}
           </div>
         </main>
       </>

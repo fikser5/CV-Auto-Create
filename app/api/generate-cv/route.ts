@@ -17,7 +17,14 @@ export async function POST(request: Request) {
   const [user, profile, jobPosting] = await Promise.all([
     prisma.user.findUniqueOrThrow({
       where: { id: userId },
-      select: { plan: true, planRenewsAt: true, freeGenerationUsed: true, purchasedCredits: true, hasEverPurchased: true },
+      select: {
+        plan: true,
+        planRenewsAt: true,
+        freeGenerationUsed: true,
+        purchasedCredits: true,
+        hasEverPurchased: true,
+        emailVerifiedAt: true,
+      },
     }),
     prisma.profile.findUnique({
       where: { userId },
@@ -38,6 +45,15 @@ export async function POST(request: Request) {
 
   const allowance = checkGenerationAllowance(user);
   if (!allowance.allowed) {
+    if (allowance.reason === "email_not_verified") {
+      return Response.json(
+        {
+          error: "Potwierdź adres e-mail, żeby wygenerować CV. Sprawdź skrzynkę (też SPAM).",
+          emailNotVerified: true,
+        },
+        { status: 403 },
+      );
+    }
     return Response.json(
       {
         error: "Wykorzystano darmowe CV. Wykup Premium albo pakiet, żeby generować kolejne.",

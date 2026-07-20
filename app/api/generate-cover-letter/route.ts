@@ -17,7 +17,14 @@ export async function POST(request: Request) {
   const [user, profile, jobPosting] = await Promise.all([
     prisma.user.findUniqueOrThrow({
       where: { id: userId },
-      select: { plan: true, planRenewsAt: true, freeGenerationUsed: true, purchasedCredits: true, hasEverPurchased: true },
+      select: {
+        plan: true,
+        planRenewsAt: true,
+        freeGenerationUsed: true,
+        purchasedCredits: true,
+        hasEverPurchased: true,
+        emailVerifiedAt: true,
+      },
     }),
     prisma.profile.findUnique({
       where: { userId },

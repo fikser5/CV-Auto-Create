@@ -93,7 +93,16 @@ export default async function CvPage({ params }: { params: Promise<{ id: string 
     prisma.generatedCv.findUnique({ where: { id }, include: { jobPosting: true } }),
     prisma.user.findUniqueOrThrow({
       where: { id: userId },
-      select: { fullName: true, email: true, plan: true, planRenewsAt: true, freeGenerationUsed: true, purchasedCredits: true, hasEverPurchased: true },
+      select: {
+        fullName: true,
+        email: true,
+        plan: true,
+        planRenewsAt: true,
+        freeGenerationUsed: true,
+        purchasedCredits: true,
+        hasEverPurchased: true,
+        emailVerifiedAt: true,
+      },
     }),
     prisma.profile.findUnique({
       where: { userId },

@@ -22,7 +22,14 @@ export default async function CvHistoryPage() {
 
   const user = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { plan: true, planRenewsAt: true, freeGenerationUsed: true, purchasedCredits: true, hasEverPurchased: true },
+    select: {
+      plan: true,
+      planRenewsAt: true,
+      freeGenerationUsed: true,
+      purchasedCredits: true,
+      hasEverPurchased: true,
+      emailVerifiedAt: true,
+    },
   });
 
   if (!canViewHistory(user)) {

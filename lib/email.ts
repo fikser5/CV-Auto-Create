@@ -36,7 +36,7 @@ function emailShell(title: string, bodyHtml: string): string {
 </html>`;
 }
 
-export async function sendWelcomeEmail(to: string, fullName: string): Promise<void> {
+export async function sendWelcomeEmail(to: string, fullName: string, verifyUrl: string): Promise<void> {
   const client = getResendClient();
   if (!client) {
     console.warn("RESEND_API_KEY nie jest skonfigurowany — pominięto e-mail powitalny.");
@@ -46,19 +46,50 @@ export async function sendWelcomeEmail(to: string, fullName: string): Promise<vo
   const html = emailShell(
     "Witaj w CVAutomat!",
     `<p style="font-size:14px;line-height:1.6;">Cześć ${fullName},</p>
-     <p style="font-size:14px;line-height:1.6;">Twoje konto zostało założone. Uzupełnij teraz swój profil zawodowy, żeby móc generować CV dopasowane do konkretnych ofert pracy.</p>`,
+     <p style="font-size:14px;line-height:1.6;">Twoje konto zostało założone. Zanim zaczniesz generować CV, potwierdź swój adres e-mail — to zajmie chwilę.</p>
+     <p style="text-align:center;margin:28px 0;">
+       <a href="${verifyUrl}" style="display:inline-block;background-image:linear-gradient(115deg,#6d28d9 10%,#be123c 100%);color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;">Potwierdź adres e-mail</a>
+     </p>
+     <p style="font-size:14px;line-height:1.6;">Po potwierdzeniu uzupełnij swój profil zawodowy, żeby móc generować CV dopasowane do konkretnych ofert pracy.</p>`,
   );
 
   try {
     await client.emails.send({
       from: FROM_ADDRESS,
       to,
-      subject: "Witaj w CVAutomat",
+      subject: "Witaj w CVAutomat — potwierdź adres e-mail",
       html,
     });
   } catch (error) {
     // A failed welcome email should never break registration — log and move on.
     console.error("Nie udało się wysłać e-maila powitalnego:", error);
+  }
+}
+
+export async function sendVerificationEmail(to: string, fullName: string, verifyUrl: string): Promise<void> {
+  const client = getResendClient();
+  if (!client) {
+    throw new Error("Wysyłka e-maili nie jest jeszcze skonfigurowana (brak klucza RESEND_API_KEY).");
+  }
+
+  const html = emailShell(
+    "Potwierdź adres e-mail",
+    `<p style="font-size:14px;line-height:1.6;">Cześć ${fullName},</p>
+     <p style="font-size:14px;line-height:1.6;">Kliknij poniższy przycisk, aby potwierdzić swój adres e-mail. Link jest ważny przez 48 godzin.</p>
+     <p style="text-align:center;margin:28px 0;">
+       <a href="${verifyUrl}" style="display:inline-block;background-image:linear-gradient(115deg,#6d28d9 10%,#be123c 100%);color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;">Potwierdź adres e-mail</a>
+     </p>`,
+  );
+
+  const { error } = await client.emails.send({
+    from: FROM_ADDRESS,
+    to,
+    subject: "Potwierdź adres e-mail — CVAutomat",
+    html,
+  });
+
+  if (error) {
+    throw new Error(`Nie udało się wysłać e-maila: ${error.message}`);
   }
 }
 
