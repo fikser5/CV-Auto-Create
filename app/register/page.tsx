@@ -74,6 +74,18 @@ export default function RegisterPage() {
             {pending ? "Tworzenie konta…" : "Zarejestruj się"}
           </button>
 
+          <p className="text-center text-xs text-muted-foreground">
+            Rejestrując się, akceptujesz{" "}
+            <Link href="/terms" className="text-primary hover:text-primary-hover">
+              Regulamin
+            </Link>{" "}
+            i{" "}
+            <Link href="/privacy" className="text-primary hover:text-primary-hover">
+              Politykę Prywatności
+            </Link>
+            .
+          </p>
+
           <p className="text-center text-sm text-muted-foreground">
             Masz już konto?{" "}
             <Link href="/login" className="font-medium text-primary hover:text-primary-hover">

@@ -448,7 +448,15 @@ export default function Home() {
             </span>
             CVAutomat — CV dopasowane do oferty, nie zmyślone od zera.
           </span>
-          <span>© 2026 CVAutomat</span>
+          <div className="flex items-center gap-4">
+            <Link href="/terms" className="hover:text-foreground">
+              Regulamin
+            </Link>
+            <Link href="/privacy" className="hover:text-foreground">
+              Polityka Prywatności
+            </Link>
+            <span>© 2026 CVAutomat</span>
+          </div>
         </div>
       </footer>
     </div>
