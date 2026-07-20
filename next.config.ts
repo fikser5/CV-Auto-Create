@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   // be missing from a serverless deployment.
   outputFileTracingIncludes: {
     "/api/cv/\\[id\\]/export": ["./assets/fonts/**/*"],
+    "/api/cover-letter/\\[id\\]/export": ["./assets/fonts/**/*"],
   },
   // Next.js dev server blocks cross-origin requests to /_next/* (JS/CSS chunks)
   // by default — the dev server only trusts "localhost" out of the box. When

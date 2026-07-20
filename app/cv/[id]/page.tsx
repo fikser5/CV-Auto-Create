@@ -4,9 +4,11 @@ import { verifySession } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { GeneratedCvContentSchema } from "@/lib/cv-schema";
 import { LanguageLevelLabels, LanguageLevelBars } from "@/lib/definitions";
+import { isPremiumActive } from "@/lib/plan";
 import { AppNav } from "@/app/components/AppNav";
+import { GenerateCoverLetterButton } from "@/app/cv/[id]/GenerateCoverLetterButton";
 import { buttonPrimary, buttonSecondary, badge } from "@/lib/ui";
-import { CheckCircleIcon, MapPinIcon, PhoneIcon, MailIcon, GlobeIcon } from "@/app/components/icons";
+import { CheckCircleIcon, MapPinIcon, PhoneIcon, MailIcon, GlobeIcon, LockIcon, CrownIcon } from "@/app/components/icons";
 
 // Fixed CV document palette — intentionally independent of the app's light/dark
 // theme tokens, since this must always visually match the exported PDF
@@ -89,7 +91,10 @@ export default async function CvPage({ params }: { params: Promise<{ id: string 
 
   const [generatedCv, user, profile] = await Promise.all([
     prisma.generatedCv.findUnique({ where: { id }, include: { jobPosting: true } }),
-    prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { fullName: true, email: true } }),
+    prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { fullName: true, email: true, plan: true, planRenewsAt: true, freeGenerationUsed: true, purchasedCredits: true, hasEverPurchased: true },
+    }),
     prisma.profile.findUnique({
       where: { userId },
       select: {
@@ -112,6 +117,7 @@ export default async function CvPage({ params }: { params: Promise<{ id: string 
   }
   const cv = parsed.data;
   const languages = profile?.languages ?? [];
+  const premiumActive = isPremiumActive(user);
 
   return (
     <>
@@ -147,6 +153,29 @@ export default async function CvPage({ params }: { params: Promise<{ id: string 
             </div>
           </div>
         )}
+
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-card p-5 print:hidden">
+          <div className="flex items-start gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-soft-foreground">
+              {premiumActive ? <CrownIcon className="h-5 w-5" /> : <LockIcon className="h-5 w-5" />}
+            </span>
+            <div>
+              <p className="text-sm font-semibold">List motywacyjny do tej oferty</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                {premiumActive
+                  ? "AI napisze list dopasowany do tej samej oferty, na podstawie Twojego profilu."
+                  : "Funkcja Premium — odblokuj, żeby generować listy motywacyjne dopasowane do oferty."}
+              </p>
+            </div>
+          </div>
+          {premiumActive ? (
+            <GenerateCoverLetterButton jobPostingId={generatedCv.jobPostingId} />
+          ) : (
+            <Link href="/dashboard#plan" className={buttonSecondary}>
+              Zobacz Premium
+            </Link>
+          )}
+        </div>
 
         <article
           className="glow-primary overflow-hidden rounded-card border border-border shadow-sm print:border-none print:shadow-none"
