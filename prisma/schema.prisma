@@ -35,13 +35,29 @@ model User {
   fullName     String   @map("full_name")
   phone        String?
   plan         Plan     @default(free)
+  // Premium subscription current period end — plan is only "aktywny" while this
+  // is in the future. Kept separate from `plan` so an expired subscription can
+  // fall back to free without losing the historical enum value.
+  planRenewsAt DateTime? @map("plan_renews_at")
+  // Explicit flag rather than deriving "free generation used" from
+  // generatedCvs.count() > 0 — avoids retroactively penalizing accounts that
+  // already had CVs before this paywall existed (defaults to false on migrate).
+  freeGenerationUsed Boolean @default(false) @map("free_generation_used")
+  // Remaining one-off "pakiet" credits (2 per 5 zł), decremented per generation
+  // once the free generation and any active subscription don't apply.
+  purchasedCredits   Int     @default(0) @map("purchased_credits")
+  // Set true on any successful purchase (subscription or package) — unlocks CV
+  // history permanently, independent of current credit balance or whether a
+  // subscription later lapses.
+  hasEverPurchased   Boolean @default(false) @map("has_ever_purchased")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  profile             Profile?
-  jobPostings         JobPosting[]
-  generatedCvs        GeneratedCv[]
-  passwordResetTokens PasswordResetToken[]
+  profile               Profile?
+  jobPostings           JobPosting[]
+  generatedCvs          GeneratedCv[]
+  generatedCoverLetters GeneratedCoverLetter[]
+  passwordResetTokens   PasswordResetToken[]
 
   @@map("users")
 }
@@ -151,8 +167,9 @@ model JobPosting {
   jobTitle    String?  @map("job_title")
   createdAt   DateTime @default(now()) @map("created_at")
 
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  generatedCvs GeneratedCv[]
+  user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  generatedCvs       GeneratedCv[]
+  generatedCoverLetters GeneratedCoverLetter[]
 
   @@map("job_postings")
 }
@@ -170,4 +187,18 @@ model GeneratedCv {
   jobPosting JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
 
   @@map("generated_cvs")
+}
+
+// Premium-only feature — see lib/plan.ts isPremiumActive() gate in the API route.
+model GeneratedCoverLetter {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  jobPostingId String   @map("job_posting_id")
+  contentJson  Json     @map("content_json")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobPosting JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+
+  @@map("generated_cover_letters")
 }

@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { AppNav } from "@/app/components/AppNav";
 import { buttonPrimary, eyebrow } from "@/lib/ui";
 import { GeneratedCvContentSchema } from "@/lib/cv-schema";
-import { FileTextIcon, ArrowRightIcon, ExternalLinkIcon } from "@/app/components/icons";
+import { canViewHistory } from "@/lib/plan";
+import { FileTextIcon, ArrowRightIcon, ExternalLinkIcon, LockIcon } from "@/app/components/icons";
 
 function formatDate(date: Date): string {
   return date.toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric" });
@@ -18,6 +19,40 @@ function getMatchScore(contentJson: unknown): number | null {
 
 export default async function CvHistoryPage() {
   const { userId } = await verifySession();
+
+  const user = await prisma.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: { plan: true, planRenewsAt: true, freeGenerationUsed: true, purchasedCredits: true, hasEverPurchased: true },
+  });
+
+  if (!canViewHistory(user)) {
+    return (
+      <>
+        <AppNav />
+        <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-12">
+          <div>
+            <span className={eyebrow}>Historia</span>
+            <h1 className="mt-1 text-2xl font-bold tracking-tight">Wygenerowane CV</h1>
+          </div>
+          <div className="flex flex-col items-center gap-4 rounded-card border border-dashed border-border p-12 text-center">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent-soft-foreground">
+              <LockIcon className="h-6 w-6" />
+            </span>
+            <div>
+              <p className="font-semibold">Historia CV to funkcja Premium</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Odblokuj podgląd wszystkich wygenerowanych CV wraz z Premium albo pakietem
+                wygenerowań.
+              </p>
+            </div>
+            <Link href="/dashboard#plan" className={buttonPrimary}>
+              Zobacz plany
+            </Link>
+          </div>
+        </main>
+      </>
+    );
+  }
 
   const generatedCvs = await prisma.generatedCv.findMany({
     where: { userId },

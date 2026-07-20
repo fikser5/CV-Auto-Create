@@ -2,14 +2,44 @@ import Link from "next/link";
 import { verifySession } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { AppNav } from "@/app/components/AppNav";
-import { FileTextIcon, TargetIcon, ArrowRightIcon, SparklesIcon } from "@/app/components/icons";
+import { describePlanStatus, PREMIUM_MONTHLY_PRICE_PLN, PACKAGE_PRICE_PLN, PACKAGE_CREDITS } from "@/lib/plan";
+import { buttonPrimary as buttonPrimaryClass, buttonSecondary as buttonSecondaryClass } from "@/lib/ui";
+import {
+  FileTextIcon,
+  TargetIcon,
+  ArrowRightIcon,
+  SparklesIcon,
+  CrownIcon,
+  CheckCircleIcon,
+} from "@/app/components/icons";
+
+function ComingSoonButton({ children, className }: { children: React.ReactNode; className: string }) {
+  return (
+    <div className="relative mt-auto">
+      <span className="absolute -top-2 -right-2 rounded-full bg-rose px-2 py-0.5 text-[10px] font-bold text-white shadow">
+        WKRÓTCE
+      </span>
+      <button type="button" disabled className={`${className} w-full cursor-not-allowed`}>
+        {children}
+      </button>
+    </div>
+  );
+}
 
 export default async function DashboardPage() {
   const { userId } = await verifySession();
   const [user, profile, cvCount] = await Promise.all([
     prisma.user.findUniqueOrThrow({
       where: { id: userId },
-      select: { fullName: true, email: true },
+      select: {
+        fullName: true,
+        email: true,
+        plan: true,
+        planRenewsAt: true,
+        freeGenerationUsed: true,
+        purchasedCredits: true,
+        hasEverPurchased: true,
+      },
     }),
     prisma.profile.findUnique({
       where: { userId },
@@ -20,6 +50,7 @@ export default async function DashboardPage() {
 
   const profileReady = (profile?._count.experiences ?? 0) > 0;
   const firstName = user.fullName.split(" ")[0];
+  const planStatus = describePlanStatus(user);
 
   return (
     <>
@@ -95,17 +126,27 @@ export default async function DashboardPage() {
               </p>
             </div>
             <div className="flex items-center gap-4">
-              <Link
-                href="/generate"
-                className={`inline-flex w-fit items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                  profileReady
-                    ? "bg-gradient-brand text-primary-foreground hover:brightness-110"
-                    : "cursor-not-allowed bg-border text-muted-foreground"
-                }`}
-              >
-                Generuj CV
-                <ArrowRightIcon />
-              </Link>
+              {planStatus.canGenerate ? (
+                <Link
+                  href="/generate"
+                  className={`inline-flex w-fit items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                    profileReady
+                      ? "bg-gradient-brand text-primary-foreground hover:brightness-110"
+                      : "cursor-not-allowed bg-border text-muted-foreground"
+                  }`}
+                >
+                  Generuj CV
+                  <ArrowRightIcon />
+                </Link>
+              ) : (
+                <Link
+                  href="#plan"
+                  className="inline-flex w-fit items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent-soft hover:text-accent-soft-foreground"
+                >
+                  Wykorzystano limit — zobacz plany
+                  <ArrowRightIcon />
+                </Link>
+              )}
               {cvCount > 0 && (
                 <Link
                   href="/cv"
@@ -128,6 +169,68 @@ export default async function DashboardPage() {
             </p>
           </div>
         )}
+
+        <section id="plan" className="scroll-mt-24 flex flex-col gap-5 rounded-card border border-border bg-card p-6">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-brand text-primary-foreground">
+              <CrownIcon className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="font-semibold">{planStatus.label}</p>
+              <p className="text-sm text-muted-foreground">{planStatus.detail}</p>
+            </div>
+          </div>
+
+          {!planStatus.isPremiumActive && (
+            <div className="grid gap-4 border-t border-border pt-5 sm:grid-cols-2">
+              <div className="flex flex-col gap-3 rounded-lg border border-primary/30 bg-accent-soft p-5">
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold text-accent-soft-foreground">Premium</p>
+                  <p className="text-sm font-medium text-accent-soft-foreground">
+                    {PREMIUM_MONTHLY_PRICE_PLN} zł<span className="font-normal">/mies.</span>
+                  </p>
+                </div>
+                <ul className="flex flex-col gap-1.5 text-sm text-accent-soft-foreground">
+                  <li className="flex items-start gap-2">
+                    <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                    Nielimitowane generowanie CV
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                    Pełna historia CV
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                    Generowanie listu motywacyjnego dopasowanego do oferty
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                    Więcej szablonów wizualnych CV (wkrótce)
+                  </li>
+                </ul>
+                <ComingSoonButton className={buttonPrimaryClass}>Wybierz Premium</ComingSoonButton>
+              </div>
+
+              <div className="flex flex-col gap-3 rounded-lg border border-border p-5">
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold">Pakiet</p>
+                  <p className="text-sm font-medium text-muted-foreground">{PACKAGE_PRICE_PLN} zł jednorazowo</p>
+                </div>
+                <ul className="flex flex-col gap-1.5 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    {PACKAGE_CREDITS} dodatkowe wygenerowania CV
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    Dostęp do historii CV
+                  </li>
+                </ul>
+                <ComingSoonButton className={buttonSecondaryClass}>Kup pakiet</ComingSoonButton>
+              </div>
+            </div>
+          )}
+        </section>
       </main>
     </>
   );

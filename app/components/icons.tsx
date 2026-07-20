@@ -182,6 +182,25 @@ export function ExternalLinkIcon({ className = "h-4 w-4" }: IconProps) {
   );
 }
 
+export function LockIcon({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className={className}>
+      <rect x="4.5" y="10.5" width="15" height="10" rx="2" />
+      <path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" strokeLinecap="round" />
+      <circle cx="12" cy="15.2" r="1.4" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function CrownIcon({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className={className}>
+      <path d="M3 8l4 3 5-6 5 6 4-3-2 10H5L3 8z" strokeLinejoin="round" strokeLinecap="round" />
+      <path d="M5 21h14" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function WandIcon({ className = base }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className={className}>

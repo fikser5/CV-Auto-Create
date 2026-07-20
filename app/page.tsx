@@ -12,6 +12,7 @@ import {
   CheckCircleIcon,
   ChevronDownIcon,
   WandIcon,
+  CrownIcon,
 } from "@/app/components/icons";
 
 const trustItems = [
@@ -41,34 +42,45 @@ const steps = [
   },
 ];
 
+const featureTones = {
+  violet: "bg-accent-soft text-accent-soft-foreground",
+  blue: "bg-blue-soft text-blue-soft-foreground",
+  rose: "bg-rose-soft text-rose-soft-foreground",
+} as const;
+
 const features = [
   {
     icon: ShieldCheckIcon,
     title: "Bez zmyślania",
     body: "AI nigdy nie dopisuje doświadczenia, którego nie masz — tylko przeformułowuje i priorytetyzuje prawdziwe dane z Twojego profilu.",
     big: true,
+    tone: "violet",
   },
   {
     icon: TargetIcon,
     title: "Dopasowanie do oferty",
     body: "Każde CV jest budowane pod konkretne wymagania i słowa kluczowe z ogłoszenia.",
+    tone: "blue",
   },
   {
     icon: LayersIcon,
     title: "Jeden profil, wiele CV",
     body: "Aplikuj na dziesiątki ofert bez przepisywania CV od zera za każdym razem.",
+    tone: "violet",
   },
   {
     icon: ClockIcon,
     title: "Kilkanaście sekund",
     body: "Od wklejenia ogłoszenia do gotowego dokumentu — bez czekania i bez formatowania ręcznego.",
+    tone: "blue",
   },
   {
     icon: FileTextIcon,
     title: "Gotowy PDF",
     body: "Estetyczny, czytelny układ gotowy do wysłania — z poprawną obsługą polskich znaków.",
+    tone: "rose",
   },
-];
+] satisfies { icon: typeof ShieldCheckIcon; title: string; body: string; big?: boolean; tone: keyof typeof featureTones }[];
 
 const faq = [
   {
@@ -76,8 +88,8 @@ const faq = [
     a: "Nie. Model pracuje wyłącznie na danych z Twojego profilu — dobiera, przeformułowuje i podkreśla to, co już masz, żeby lepiej odpowiadało ofercie. Nigdy nie dodaje nowych faktów.",
   },
   {
-    q: "Ile CV mogę wygenerować?",
-    a: "Tyle, ile potrzebujesz — dla każdej oferty osobno, na bazie tego samego profilu zawodowego.",
+    q: "Ile CV mogę wygenerować za darmo?",
+    a: "Jedno — na start, żeby przetestować jakość dopasowania. Kolejne CV wymagają Premium albo pakietu wygenerowań.",
   },
   {
     q: "Jakie dane muszę uzupełnić, żeby zacząć?",
@@ -86,6 +98,42 @@ const faq = [
   {
     q: "Czy moje dane są bezpieczne?",
     a: "Tak — dane trafiają wyłącznie do Twojego konta i są wykorzystywane tylko do generowania Twoich CV.",
+  },
+];
+
+const pricingPlans = [
+  {
+    name: "Darmowy",
+    price: "0 zł",
+    period: "",
+    description: "Sprawdź jakość dopasowania na start.",
+    features: ["1 wygenerowane CV", "Pełne dopasowanie AI do oferty", "Eksport do PDF"],
+    cta: "Załóż darmowe konto",
+    highlighted: false,
+  },
+  {
+    name: "Premium",
+    price: "29 zł",
+    period: "/miesiąc",
+    description: "Dla osób aktywnie szukających pracy.",
+    features: [
+      "Nielimitowane generowanie CV",
+      "Pełna historia wygenerowanych CV",
+      "Generowanie listu motywacyjnego dopasowanego do oferty",
+      "Więcej szablonów wizualnych CV (wkrótce)",
+    ],
+    cta: "Wybierz Premium",
+    highlighted: true,
+    ribbon: "Najpopularniejszy",
+  },
+  {
+    name: "Pakiet",
+    price: "5 zł",
+    period: "jednorazowo",
+    description: "Kiedy potrzebujesz tylko kilku CV.",
+    features: ["2 wygenerowania CV", "Dostęp do historii CV po zakupie"],
+    cta: "Kup pakiet",
+    highlighted: false,
   },
 ];
 
@@ -117,7 +165,7 @@ export default function Home() {
       <main className="relative flex flex-1 flex-col items-center px-6 pb-24">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-[-6rem] -z-10 h-[38rem] bg-[radial-gradient(ellipse_55%_45%_at_20%_10%,var(--accent-soft),transparent),radial-gradient(ellipse_40%_35%_at_85%_5%,var(--rose-soft),transparent)]"
+          className="pointer-events-none absolute inset-x-0 top-[-6rem] -z-10 h-[38rem] bg-[radial-gradient(ellipse_50%_42%_at_16%_12%,var(--accent-soft),transparent),radial-gradient(ellipse_45%_38%_at_58%_-4%,var(--blue-soft),transparent),radial-gradient(ellipse_40%_35%_at_92%_10%,var(--rose-soft),transparent)]"
         />
 
         <div className="grid w-full max-w-6xl grid-cols-1 items-center gap-16 pt-16 lg:grid-cols-[1.05fr_0.95fr] lg:pt-24">
@@ -251,7 +299,7 @@ export default function Home() {
                     feature.big ? "sm:col-span-2 lg:col-span-1 lg:row-span-2 lg:justify-center bg-[linear-gradient(155deg,var(--accent-soft),var(--card)_55%)]" : ""
                   }`}
                 >
-                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-soft text-accent-soft-foreground">
+                  <span className={`flex h-10 w-10 items-center justify-center rounded-lg ${featureTones[feature.tone]}`}>
                     <Icon className="h-5 w-5" />
                   </span>
                   <h3 className="font-semibold">{feature.title}</h3>
@@ -291,6 +339,64 @@ export default function Home() {
                 interfejsu oraz ścisłą współpracę z zespołem UX/UI.”
               </p>
             </div>
+          </div>
+        </section>
+
+        {/* Cennik */}
+        <section className="mt-32 w-full max-w-5xl">
+          <div className="flex flex-col items-center text-center">
+            <span className={eyebrow}>Cennik</span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight">Zacznij za darmo, płać dopiero gdy potrzebujesz więcej</h2>
+            <p className="mt-3 max-w-xl text-muted-foreground">
+              Pierwsze CV zawsze bezpłatnie. Bez ukrytych kosztów, bez zobowiązań.
+            </p>
+          </div>
+
+          <div className="mt-14 grid grid-cols-1 gap-6 lg:grid-cols-3">
+            {pricingPlans.map((plan) => (
+              <div
+                key={plan.name}
+                className={`card-hover relative flex flex-col gap-6 rounded-card border p-7 ${
+                  plan.highlighted
+                    ? "border-primary/40 bg-[linear-gradient(155deg,var(--accent-soft),var(--card)_60%)] shadow-lg lg:-translate-y-3"
+                    : "border-border bg-card"
+                }`}
+              >
+                {plan.ribbon && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-brand px-3 py-1 text-xs font-semibold text-primary-foreground shadow">
+                    {plan.ribbon}
+                  </span>
+                )}
+                <div>
+                  <div className="flex items-center gap-2">
+                    {plan.highlighted && <CrownIcon className="h-4 w-4 text-primary" />}
+                    <h3 className="font-semibold">{plan.name}</h3>
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">{plan.description}</p>
+                </div>
+
+                <div className="flex items-baseline gap-1.5">
+                  <span className="font-display text-4xl italic font-normal">{plan.price}</span>
+                  {plan.period && <span className="text-sm text-muted-foreground">{plan.period}</span>}
+                </div>
+
+                <ul className="flex flex-1 flex-col gap-2.5">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-2.5 text-sm">
+                      <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+
+                <Link
+                  href="/register"
+                  className={plan.highlighted ? `${buttonPrimary} w-full` : `${buttonSecondary} w-full`}
+                >
+                  {plan.cta}
+                </Link>
+              </div>
+            ))}
           </div>
         </section>
 

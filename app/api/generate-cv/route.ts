@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/api-auth";
 import { generateCvContent } from "@/lib/claude";
+import { checkGenerationAllowance, consumeGenerationAllowance } from "@/lib/plan";
 
 export async function POST(request: Request) {
   const userId = await requireUserId();
@@ -13,7 +14,11 @@ export async function POST(request: Request) {
     return Response.json({ error: "Brak jobPostingId." }, { status: 400 });
   }
 
-  const [profile, jobPosting] = await Promise.all([
+  const [user, profile, jobPosting] = await Promise.all([
+    prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { plan: true, planRenewsAt: true, freeGenerationUsed: true, purchasedCredits: true, hasEverPurchased: true },
+    }),
     prisma.profile.findUnique({
       where: { userId },
       include: { experiences: true, education: true, skills: true, interests: true },
@@ -28,6 +33,17 @@ export async function POST(request: Request) {
     return Response.json(
       { error: "Uzupełnij najpierw profil (przynajmniej jedno doświadczenie zawodowe)." },
       { status: 422 },
+    );
+  }
+
+  const allowance = checkGenerationAllowance(user);
+  if (!allowance.allowed) {
+    return Response.json(
+      {
+        error: "Wykorzystano darmowe CV. Wykup Premium albo pakiet, żeby generować kolejne.",
+        limitReached: true,
+      },
+      { status: 402 },
     );
   }
 
@@ -87,6 +103,10 @@ export async function POST(request: Request) {
       version: version + 1,
     },
   });
+
+  // Only spend the free generation / a credit once generation has actually
+  // succeeded and been saved — a failed Claude call shouldn't cost the user.
+  await consumeGenerationAllowance(userId, allowance);
 
   return Response.json({ generatedCv }, { status: 201 });
 }
