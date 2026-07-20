@@ -25,8 +25,11 @@ export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme | null>(null);
 
   useEffect(() => {
+    // Light is the automatic default regardless of OS preference — only an
+    // explicit prior choice (data-theme, set from localStorage before paint
+    // in app/layout.tsx) should ever start this on dark.
     const current = document.documentElement.getAttribute("data-theme") as Theme | null;
-    setTheme(current ?? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
+    setTheme(current ?? "light");
   }, []);
 
   function toggle() {

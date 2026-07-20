@@ -1,75 +1,62 @@
 @import "tailwindcss";
 
 :root {
-  --background: #faf9fb;
-  --foreground: #1c1524;
+  /* Cool blue-grey neutrals (not violet-tinted) so white cards actually
+     separate from the page background instead of blending into it, and so
+     the violet/rose brand accents pop against a calmer backdrop. */
+  --background: #f4f7fc;
+  --foreground: #161b26;
   --card: #ffffff;
-  --card-foreground: #1c1524;
-  --border: #e6e1eb;
-  --muted-foreground: #6f6579;
+  --card-foreground: #161b26;
+  --border: #dbe3f0;
+  --muted-foreground: #5b6478;
   --primary: #6d28d9;
   --primary-hover: #5b21b6;
   --primary-foreground: #ffffff;
-  --accent-soft: #f3e8ff;
-  --accent-soft-foreground: #6d28d9;
+  --accent-soft: #eef1ff;
+  --accent-soft-foreground: #4338ca;
   --rose: #be123c;
   --rose-soft: #ffe4e6;
   --rose-soft-foreground: #9f1239;
   --blue: #2563eb;
+  --blue-soft: #e3edff;
+  --blue-soft-foreground: #1d4ed8;
   --danger: #dc2626;
   --danger-soft: #fef2f2;
   --radius: 0.75rem;
-  --grid-line: rgba(109, 40, 217, 0.08);
-  --glow: rgba(109, 40, 217, 0.18);
+  /* Ambient dot-grid + hover glow now read cool/blue instead of violet — the
+     brand gradient (still violet -> rose) stays the warm accent that pops. */
+  --grid-line: rgba(37, 99, 235, 0.08);
+  --glow: rgba(37, 99, 235, 0.16);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0b0710;
-    --foreground: #f3eef8;
-    --card: #171018;
-    --card-foreground: #f3eef8;
-    --border: #2c2233;
-    --muted-foreground: #a99bb5;
-    --primary: #a78bfa;
-    --primary-hover: #c4b5fd;
-    --primary-foreground: #1c1023;
-    --accent-soft: #2a1a45;
-    --accent-soft-foreground: #d8b4fe;
-    --rose: #fb7185;
-    --rose-soft: #3f0d1b;
-    --rose-soft-foreground: #fda4af;
-    --blue: #60a5fa;
-    --danger: #f87171;
-    --danger-soft: #450a0a;
-    --grid-line: rgba(167, 139, 250, 0.08);
-    --glow: rgba(167, 139, 250, 0.25);
-  }
-}
-
-/* Manual override via the theme toggle (ThemeToggle sets this on <html>).
-   Attribute selectors outrank the plain `:root` rules above regardless of
-   source order, so these always win over the system preference. */
+/* Light is the automatic default regardless of OS/browser color-scheme
+   preference — deliberately no `@media (prefers-color-scheme: dark)` block.
+   Dark only applies when the user explicitly picks it via ThemeToggle, which
+   sets data-theme="dark" on <html> (persisted to localStorage, read back in
+   app/layout.tsx's inline script before paint). */
 :root[data-theme="light"] {
-  --background: #faf9fb;
-  --foreground: #1c1524;
+  --background: #f4f7fc;
+  --foreground: #161b26;
   --card: #ffffff;
-  --card-foreground: #1c1524;
-  --border: #e6e1eb;
-  --muted-foreground: #6f6579;
+  --card-foreground: #161b26;
+  --border: #dbe3f0;
+  --muted-foreground: #5b6478;
   --primary: #6d28d9;
   --primary-hover: #5b21b6;
   --primary-foreground: #ffffff;
-  --accent-soft: #f3e8ff;
-  --accent-soft-foreground: #6d28d9;
+  --accent-soft: #eef1ff;
+  --accent-soft-foreground: #4338ca;
   --rose: #be123c;
   --rose-soft: #ffe4e6;
   --rose-soft-foreground: #9f1239;
   --blue: #2563eb;
+  --blue-soft: #e3edff;
+  --blue-soft-foreground: #1d4ed8;
   --danger: #dc2626;
   --danger-soft: #fef2f2;
-  --grid-line: rgba(109, 40, 217, 0.08);
-  --glow: rgba(109, 40, 217, 0.18);
+  --grid-line: rgba(37, 99, 235, 0.08);
+  --glow: rgba(37, 99, 235, 0.16);
 }
 
 :root[data-theme="dark"] {
@@ -88,6 +75,8 @@
   --rose-soft: #3f0d1b;
   --rose-soft-foreground: #fda4af;
   --blue: #60a5fa;
+  --blue-soft: #16305c;
+  --blue-soft-foreground: #93c5fd;
   --danger: #f87171;
   --danger-soft: #450a0a;
   --grid-line: rgba(167, 139, 250, 0.08);
@@ -110,6 +99,8 @@
   --color-rose-soft: var(--rose-soft);
   --color-rose-soft-foreground: var(--rose-soft-foreground);
   --color-blue: var(--blue);
+  --color-blue-soft: var(--blue-soft);
+  --color-blue-soft-foreground: var(--blue-soft-foreground);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --radius-card: var(--radius);
