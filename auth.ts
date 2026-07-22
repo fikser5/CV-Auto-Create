@@ -4,6 +4,12 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  // Auth.js only auto-trusts the request Host header on Vercel (via the
+  // VERCEL env var). On any other host (Render, etc.) it rejects every
+  // request with UntrustedHost unless this is set explicitly — we terminate
+  // TLS at the platform's edge/proxy in every deployment target we use, so
+  // the forwarded host header is trustworthy here.
+  trustHost: true,
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
