@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { SkillLevels, LanguageLevels } from "@/lib/definitions";
 import { LanguageLevelLabels, LanguageLevelBars } from "@/lib/definitions";
 import { input, buttonPrimary, buttonSecondary, errorText, card, tag } from "@/lib/ui";
+import { DateSelect } from "@/app/profile/DateSelect";
 import {
   UserIcon,
   BriefcaseIcon,
@@ -553,21 +554,16 @@ export function ProfileEditor({ initialData }: { initialData: InitialData }) {
           <div className="grid grid-cols-2 gap-3">
             <label className="flex flex-col gap-1 text-sm text-muted-foreground">
               Data rozpoczęcia
-              <input
-                type="date"
-                className={input}
-                required
+              <DateSelect
                 value={newExperience.startDate}
-                onChange={(e) => setNewExperience({ ...newExperience, startDate: e.target.value })}
+                onChange={(value) => setNewExperience({ ...newExperience, startDate: value })}
               />
             </label>
             <label className="flex flex-col gap-1 text-sm text-muted-foreground">
               Data zakończenia (puste = obecna praca)
-              <input
-                type="date"
-                className={input}
+              <DateSelect
                 value={newExperience.endDate}
-                onChange={(e) => setNewExperience({ ...newExperience, endDate: e.target.value })}
+                onChange={(value) => setNewExperience({ ...newExperience, endDate: value })}
               />
             </label>
           </div>
@@ -623,21 +619,16 @@ export function ProfileEditor({ initialData }: { initialData: InitialData }) {
           <div className="grid grid-cols-2 gap-3">
             <label className="flex flex-col gap-1 text-sm text-muted-foreground">
               Data rozpoczęcia
-              <input
-                type="date"
-                className={input}
-                required
+              <DateSelect
                 value={newEducation.startDate}
-                onChange={(e) => setNewEducation({ ...newEducation, startDate: e.target.value })}
+                onChange={(value) => setNewEducation({ ...newEducation, startDate: value })}
               />
             </label>
             <label className="flex flex-col gap-1 text-sm text-muted-foreground">
               Data zakończenia
-              <input
-                type="date"
-                className={input}
+              <DateSelect
                 value={newEducation.endDate}
-                onChange={(e) => setNewEducation({ ...newEducation, endDate: e.target.value })}
+                onChange={(value) => setNewEducation({ ...newEducation, endDate: value })}
               />
             </label>
           </div>
