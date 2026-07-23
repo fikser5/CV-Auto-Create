@@ -1,6 +1,20 @@
 import * as z from "zod/v4";
 
 export const GeneratedCvContentSchema = z.object({
+  // Used only to auto-fill JobPosting.jobTitle/companyName for the CV history
+  // list (app/cv/page.tsx) — never rendered on the CV/PDF itself. Kept
+  // separate from `headline` (which is the AI's tailored professional title
+  // for the candidate, not necessarily the literal job ad title).
+  detectedJobTitle: z
+    .string()
+    .describe(
+      "Dokładna nazwa stanowiska tak, jak podana w treści oferty pracy (nie przeformułowana). Puste, jeśli oferta nie podaje jednoznacznej nazwy stanowiska.",
+    )
+    .default(""),
+  detectedCompanyName: z
+    .string()
+    .describe("Nazwa firmy rekrutującej, tak jak podana w treści oferty. Puste, jeśli oferta jej nie podaje.")
+    .default(""),
   headline: z.string().describe("Krótki nagłówek zawodowy dopasowany do oferty, np. 'Senior Frontend Developer'"),
   summary: z.string().describe("Podsumowanie zawodowe (2-4 zdania) podkreślające dopasowanie do oferty"),
   experience: z.array(

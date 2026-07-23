@@ -51,7 +51,10 @@ Umiejętności miękkie (softSkills):
 - Wybieraj i sortuj te, które najlepiej odpowiadają oczekiwaniom z oferty.
 
 Ocena dopasowania (matchScore, matchSummary):
-- Oceniaj szczerze, porównując realne wymagania z oferty z tym, co faktycznie jest w profilu. To pole widzi tylko sam użytkownik (nie trafia na CV wysyłane do pracodawcy), więc nie ma powodu zawyżać — celem jest pomóc mu zrozumieć, na ile pasuje i czego ewentualnie brakuje.`;
+- Oceniaj szczerze, porównując realne wymagania z oferty z tym, co faktycznie jest w profilu. To pole widzi tylko sam użytkownik (nie trafia na CV wysyłane do pracodawcy), więc nie ma powodu zawyżać — celem jest pomóc mu zrozumieć, na ile pasuje i czego ewentualnie brakuje.
+
+Wykryte stanowisko/firma (detectedJobTitle, detectedCompanyName):
+- Przepisz je dokładnie tak, jak podane w treści oferty — to nie jest pole kreatywne, nie przeformułowuj. Jeśli treść oferty nie podaje jednoznacznie nazwy stanowiska albo firmy, zostaw odpowiednie pole puste zamiast zgadywać.`;
 
 export async function generateCvContent(
   userId: string,

@@ -125,5 +125,16 @@ export async function POST(request: Request) {
   // succeeded and been saved — a failed Claude call shouldn't cost the user.
   await consumeGenerationAllowance(userId, allowance);
 
+  // Backfill the job posting's title/company from what the model detected in
+  // the posting text, but only fields the user left blank — never overwrite
+  // something they typed in by hand. Powers the CV history list (app/cv/page.tsx)
+  // without a separate extraction call, since this content is already generated.
+  const jobPostingUpdate: Record<string, string> = {};
+  if (!jobPosting.jobTitle && content.detectedJobTitle) jobPostingUpdate.jobTitle = content.detectedJobTitle;
+  if (!jobPosting.companyName && content.detectedCompanyName) jobPostingUpdate.companyName = content.detectedCompanyName;
+  if (Object.keys(jobPostingUpdate).length > 0) {
+    await prisma.jobPosting.update({ where: { id: jobPostingId }, data: jobPostingUpdate });
+  }
+
   return Response.json({ generatedCv }, { status: 201 });
 }
