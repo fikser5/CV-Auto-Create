@@ -121,6 +121,12 @@ export default async function CvPage({ params }: { params: Promise<{ id: string 
     notFound();
   }
 
+  const existingCoverLetter = await prisma.generatedCoverLetter.findFirst({
+    where: { jobPostingId: generatedCv.jobPostingId, userId },
+    orderBy: { createdAt: "desc" },
+    select: { id: true },
+  });
+
   const parsed = GeneratedCvContentSchema.safeParse(generatedCv.contentJson);
   if (!parsed.success) {
     throw new Error("Zapisana treść CV ma nieoczekiwany format.");
@@ -172,13 +178,19 @@ export default async function CvPage({ params }: { params: Promise<{ id: string 
             <div>
               <p className="text-sm font-semibold">List motywacyjny do tej oferty</p>
               <p className="mt-0.5 text-sm text-muted-foreground">
-                {premiumActive
-                  ? "AI napisze list dopasowany do tej samej oferty, na podstawie Twojego profilu."
-                  : "Funkcja Premium — odblokuj, żeby generować listy motywacyjne dopasowane do oferty."}
+                {existingCoverLetter
+                  ? "Masz już wygenerowany list motywacyjny do tej oferty."
+                  : premiumActive
+                    ? "AI napisze list dopasowany do tej samej oferty, na podstawie Twojego profilu."
+                    : "Funkcja Premium — odblokuj, żeby generować listy motywacyjne dopasowane do oferty."}
               </p>
             </div>
           </div>
-          {premiumActive ? (
+          {existingCoverLetter ? (
+            <Link href={`/cover-letter/${existingCoverLetter.id}`} className={buttonPrimary}>
+              Zobacz list motywacyjny
+            </Link>
+          ) : premiumActive ? (
             <GenerateCoverLetterButton jobPostingId={generatedCv.jobPostingId} />
           ) : (
             <Link href="/dashboard#plan" className={buttonSecondary}>

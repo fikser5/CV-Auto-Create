@@ -62,11 +62,26 @@ export default async function CvHistoryPage() {
     );
   }
 
-  const generatedCvs = await prisma.generatedCv.findMany({
-    where: { userId },
-    include: { jobPosting: true },
-    orderBy: { createdAt: "desc" },
-  });
+  const [generatedCvs, coverLetters] = await Promise.all([
+    prisma.generatedCv.findMany({
+      where: { userId },
+      include: { jobPosting: true },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.generatedCoverLetter.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, jobPostingId: true },
+    }),
+  ]);
+  // Most recent cover letter per job posting — a posting can have more than
+  // one if the user regenerated, the history link should point at the latest.
+  const coverLetterByJobPosting = new Map<string, string>();
+  for (const letter of coverLetters) {
+    if (!coverLetterByJobPosting.has(letter.jobPostingId)) {
+      coverLetterByJobPosting.set(letter.jobPostingId, letter.id);
+    }
+  }
 
   return (
     <>
@@ -98,6 +113,7 @@ export default async function CvHistoryPage() {
           <ul className="flex flex-col gap-3">
             {generatedCvs.map((cv) => {
               const matchScore = getMatchScore(cv.contentJson);
+              const coverLetterId = coverLetterByJobPosting.get(cv.jobPostingId);
               return (
                 <li key={cv.id} className="card-hover rounded-card border border-border bg-card p-5">
                   <div className="flex flex-wrap items-center justify-between gap-3">
@@ -135,13 +151,24 @@ export default async function CvHistoryPage() {
                         </p>
                       </div>
                     </div>
-                    <Link
-                      href={`/cv/${cv.id}`}
-                      className="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-primary hover:text-primary-hover"
-                    >
-                      Zobacz CV
-                      <ArrowRightIcon />
-                    </Link>
+                    <div className="flex shrink-0 flex-col items-end gap-1.5">
+                      <Link
+                        href={`/cv/${cv.id}`}
+                        className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary-hover"
+                      >
+                        Zobacz CV
+                        <ArrowRightIcon />
+                      </Link>
+                      {coverLetterId && (
+                        <Link
+                          href={`/cover-letter/${coverLetterId}`}
+                          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+                        >
+                          <FileTextIcon className="h-3 w-3" />
+                          List motywacyjny
+                        </Link>
+                      )}
+                    </div>
                   </div>
                 </li>
               );
