@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { Footer } from "@/app/components/Footer";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -46,7 +47,10 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="flex min-h-full flex-col font-sans">{children}</body>
+      <body className="flex min-h-full flex-col font-sans">
+        {children}
+        <Footer />
+      </body>
     </html>
   );
 }

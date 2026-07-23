@@ -441,22 +441,13 @@ export default function Home() {
       </main>
 
       <footer className="border-t border-border px-6 py-10">
-        <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-4 text-sm text-muted-foreground sm:flex-row">
+        <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-center gap-4 text-sm text-muted-foreground sm:flex-row">
           <span className="flex items-center gap-2">
             <span className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-brand text-xs font-bold text-primary-foreground">
               C
             </span>
             CVAutomat — CV dopasowane do oferty, nie zmyślone od zera.
           </span>
-          <div className="flex items-center gap-4">
-            <Link href="/terms" className="hover:text-foreground">
-              Regulamin
-            </Link>
-            <Link href="/privacy" className="hover:text-foreground">
-              Polityka Prywatności
-            </Link>
-            <span>© 2026 CVAutomat</span>
-          </div>
         </div>
       </footer>
     </div>
