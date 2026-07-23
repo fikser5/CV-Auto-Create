@@ -10,24 +10,31 @@ function formatDayLabel(iso: string): string {
   return d.toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit" });
 }
 
+type CostBucket = { date: string; cost: number };
+
 export function AdminCharts({
   dayBuckets,
   premiumCount,
   freeCount,
+  costBuckets,
 }: {
   dayBuckets: DayBucket[];
   premiumCount: number;
   freeCount: number;
+  costBuckets: CostBucket[];
 }) {
   const [hoveredDay, setHoveredDay] = useState<number | null>(null);
   const [hoveredSegment, setHoveredSegment] = useState<"premium" | "free" | null>(null);
+  const [hoveredCostDay, setHoveredCostDay] = useState<number | null>(null);
 
   const maxCount = Math.max(1, ...dayBuckets.map((b) => b.count));
+  const maxCost = Math.max(0.01, ...costBuckets.map((b) => b.cost));
   const total = premiumCount + freeCount || 1;
   const premiumPct = (premiumCount / total) * 100;
   const freePct = (freeCount / total) * 100;
 
   return (
+    <div className="flex flex-col gap-4">
     <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
       {/* Rejestracje w czasie — pojedyncza seria, tytuł pełni rolę legendy */}
       <div className={`${card} flex flex-col gap-4 p-6`}>
@@ -137,6 +144,55 @@ export function AdminCharts({
               {freeCount} ({freePct.toFixed(0)}%)
             </span>
           </div>
+        </div>
+      </div>
+    </div>
+
+      {/* Koszt API Claude — pojedyncza seria, tytuł pełni rolę legendy */}
+      <div className={`${card} flex flex-col gap-4 p-6`}>
+        <div>
+          <h2 className="font-semibold">Koszt API Claude w ostatnich 14 dniach</h2>
+          <p className="text-sm text-muted-foreground">
+            Szacunek wg cennika Opus 4.8 (5$/1M tokenów wejściowych, 25$/1M wyjściowych), w USD.
+          </p>
+        </div>
+        <div className="relative flex h-32 items-end gap-1.5">
+          <div aria-hidden className="pointer-events-none absolute inset-0 flex flex-col justify-between">
+            <div className="border-t border-border/70" />
+            <div className="border-t border-border/70" />
+            <div className="border-t border-border/70" />
+          </div>
+          {costBuckets.map((bucket, i) => {
+            const heightPct = bucket.cost > 0 ? Math.max((bucket.cost / maxCost) * 100, 4) : 0;
+            return (
+              <div
+                key={bucket.date}
+                className="group relative flex h-full flex-1 flex-col items-center justify-end"
+                onPointerEnter={() => setHoveredCostDay(i)}
+                onPointerLeave={() => setHoveredCostDay(null)}
+                onFocus={() => setHoveredCostDay(i)}
+                onBlur={() => setHoveredCostDay(null)}
+                tabIndex={0}
+              >
+                {hoveredCostDay === i && (
+                  <div className="pointer-events-none absolute -top-8 z-10 whitespace-nowrap rounded-md bg-foreground px-2 py-1 text-xs font-medium text-background shadow-lg">
+                    <span className="font-semibold">${bucket.cost.toFixed(3)}</span> · {formatDayLabel(bucket.date)}
+                  </div>
+                )}
+                <div
+                  className={`w-full max-w-6 rounded-t transition-colors ${hoveredCostDay === i ? "bg-primary-hover" : "bg-primary"}`}
+                  style={{ height: `${heightPct}%` }}
+                />
+              </div>
+            );
+          })}
+        </div>
+        <div className="flex gap-1.5 text-[10px] text-muted-foreground">
+          {costBuckets.map((bucket) => (
+            <span key={bucket.date} className="flex-1 text-center">
+              {formatDayLabel(bucket.date)}
+            </span>
+          ))}
         </div>
       </div>
     </div>

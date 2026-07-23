@@ -63,6 +63,7 @@ export async function POST(request: Request) {
   let content;
   try {
     content = await generateCoverLetterContent(
+      userId,
       {
         headline: profile.headline,
         summary: profile.summary,

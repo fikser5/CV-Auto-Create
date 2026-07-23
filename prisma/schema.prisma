@@ -69,6 +69,7 @@ model User {
   generatedCoverLetters    GeneratedCoverLetter[]
   passwordResetTokens      PasswordResetToken[]
   emailVerificationTokens  EmailVerificationToken[]
+  apiUsageLogs             ApiUsageLog[]
 
   @@map("users")
 }
@@ -225,4 +226,39 @@ model GeneratedCoverLetter {
   jobPosting JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
 
   @@map("generated_cover_letters")
+}
+
+// One row per Claude API call (CV generation, cover letter, CV import) — feeds
+// the admin cost/usage chart. userId is a relation (deleting the user cleans
+// up their usage history along with everything else), but pricing itself is
+// NOT stored here — it's computed at query time from lib/admin-usage.ts so a
+// future rate change doesn't require rewriting history.
+model ApiUsageLog {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  kind         String
+  inputTokens  Int      @map("input_tokens")
+  outputTokens Int      @map("output_tokens")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("api_usage_logs")
+}
+
+// Audit trail for admin panel actions (plan changes, credit grants, account
+// deletion). targetEmail is denormalized (not a relation) on purpose — it
+// must stay readable even after the target account is deleted, which a hard
+// FK with cascade would silently erase along with the very record of the
+// deletion.
+model AdminActionLog {
+  id           String   @id @default(uuid())
+  adminId      String   @map("admin_id")
+  adminEmail   String   @map("admin_email")
+  targetEmail  String   @map("target_email")
+  action       String
+  details      String?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("admin_action_logs")
 }

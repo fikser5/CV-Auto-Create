@@ -33,7 +33,7 @@ export async function POST(request: Request) {
 
   let extracted;
   try {
-    extracted = await extractProfileFromCv(base64);
+    extracted = await extractProfileFromCv(userId, base64);
   } catch (error) {
     if (error instanceof Anthropic.AuthenticationError) {
       return Response.json(

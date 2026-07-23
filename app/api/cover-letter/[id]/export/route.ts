@@ -8,15 +8,21 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   if (userId instanceof Response) return userId;
   const { id } = await params;
 
-  const [generatedCoverLetter, user, profile] = await Promise.all([
+  const [generatedCoverLetter, requestingUser] = await Promise.all([
     prisma.generatedCoverLetter.findUnique({ where: { id } }),
-    prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { fullName: true, email: true } }),
-    prisma.profile.findUnique({ where: { userId }, select: { location: true, phone: true } }),
+    prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { isAdmin: true } }),
   ]);
 
-  if (!generatedCoverLetter || generatedCoverLetter.userId !== userId) {
+  if (!generatedCoverLetter || (generatedCoverLetter.userId !== userId && !requestingUser.isAdmin)) {
     return Response.json({ error: "Nie znaleziono listu motywacyjnego." }, { status: 404 });
   }
+
+  // Always sourced from the letter's actual owner, not the requesting
+  // session — see the identical fix in the CV export route.
+  const [user, profile] = await Promise.all([
+    prisma.user.findUniqueOrThrow({ where: { id: generatedCoverLetter.userId }, select: { fullName: true, email: true } }),
+    prisma.profile.findUnique({ where: { userId: generatedCoverLetter.userId }, select: { location: true, phone: true } }),
+  ]);
 
   const parsed = GeneratedCoverLetterContentSchema.safeParse(generatedCoverLetter.contentJson);
   if (!parsed.success) {

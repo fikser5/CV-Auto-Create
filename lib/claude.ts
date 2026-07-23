@@ -1,11 +1,20 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
+import { prisma } from "@/lib/prisma";
 import { GeneratedCvContentSchema, type GeneratedCvContent } from "@/lib/cv-schema";
 import { GeneratedCoverLetterContentSchema, type GeneratedCoverLetterContent } from "@/lib/cover-letter-schema";
 import { ImportedProfileSchema, type ImportedProfile } from "@/lib/cv-import-schema";
 
 const client = new Anthropic();
+
+// Fire-and-forget on purpose — a logging failure must never fail the actual
+// generation the user is waiting on. Feeds the admin panel's usage/cost chart.
+function logApiUsage(userId: string, kind: string, usage: { input_tokens: number; output_tokens: number }) {
+  prisma.apiUsageLog
+    .create({ data: { userId, kind, inputTokens: usage.input_tokens, outputTokens: usage.output_tokens } })
+    .catch((error) => console.error("Nie udało się zapisać logu zużycia API:", error));
+}
 
 type ProfileForPrompt = {
   headline: string | null;
@@ -45,6 +54,7 @@ Ocena dopasowania (matchScore, matchSummary):
 - Oceniaj szczerze, porównując realne wymagania z oferty z tym, co faktycznie jest w profilu. To pole widzi tylko sam użytkownik (nie trafia na CV wysyłane do pracodawcy), więc nie ma powodu zawyżać — celem jest pomóc mu zrozumieć, na ile pasuje i czego ewentualnie brakuje.`;
 
 export async function generateCvContent(
+  userId: string,
   profile: ProfileForPrompt,
   jobPostingText: string,
 ): Promise<GeneratedCvContent> {
@@ -70,6 +80,8 @@ Wygeneruj CV dopasowane do tej oferty, korzystając wyłącznie z powyższych da
     messages: [{ role: "user", content: userPrompt }],
   });
 
+  logApiUsage(userId, "cv", message.usage);
+
   if (!message.parsed_output) {
     throw new Error("Model nie zwrócił poprawnie ustrukturyzowanej odpowiedzi.");
   }
@@ -87,6 +99,7 @@ Zasady:
 - Nie dodawaj powitania (np. "Szanowni Państwo") ani pożegnania (np. "Z poważaniem") do treści akapitów ani do pola "closing" — powitanie renderowane jest osobno z pola recipientLine, a formuła pożegnalna i podpis są dodawane automatycznie przez aplikację.`;
 
 export async function generateCoverLetterContent(
+  userId: string,
   profile: ProfileForPrompt,
   jobPostingText: string,
   jobMeta: { companyName: string | null; jobTitle: string | null },
@@ -116,6 +129,8 @@ Napisz list motywacyjny dopasowany do tej oferty, korzystając wyłącznie z pow
     messages: [{ role: "user", content: userPrompt }],
   });
 
+  logApiUsage(userId, "cover_letter", message.usage);
+
   if (!message.parsed_output) {
     throw new Error("Model nie zwrócił poprawnie ustrukturyzowanej odpowiedzi.");
   }
@@ -132,7 +147,7 @@ Zasady:
 - Zachowaj chronologię doświadczenia i edukacji taką, jak w dokumencie.
 - Pole "description" dla doświadczenia to zwięzłe przepisanie realnych obowiązków/osiągnięć podanych przy danym stanowisku — nie parafrazuj kreatywnie, trzymaj się treści dokumentu.`;
 
-export async function extractProfileFromCv(pdfBase64: string): Promise<ImportedProfile> {
+export async function extractProfileFromCv(userId: string, pdfBase64: string): Promise<ImportedProfile> {
   const message = await client.messages.parse({
     model: "claude-opus-4-8",
     max_tokens: 6000,
@@ -152,6 +167,8 @@ export async function extractProfileFromCv(pdfBase64: string): Promise<ImportedP
       },
     ],
   });
+
+  logApiUsage(userId, "cv_import", message.usage);
 
   if (!message.parsed_output) {
     throw new Error("Model nie zwrócił poprawnie ustrukturyzowanej odpowiedzi.");

@@ -8,11 +8,22 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   if (userId instanceof Response) return userId;
   const { id } = await params;
 
-  const [generatedCv, user, profile] = await Promise.all([
+  const [generatedCv, requestingUser] = await Promise.all([
     prisma.generatedCv.findUnique({ where: { id } }),
-    prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { fullName: true, email: true } }),
+    prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { isAdmin: true } }),
+  ]);
+
+  if (!generatedCv || (generatedCv.userId !== userId && !requestingUser.isAdmin)) {
+    return Response.json({ error: "Nie znaleziono CV." }, { status: 404 });
+  }
+
+  // Always sourced from the CV's actual owner, not the requesting session —
+  // otherwise an admin viewing someone else's CV would get their own name/
+  // contact details baked into the exported PDF.
+  const [user, profile] = await Promise.all([
+    prisma.user.findUniqueOrThrow({ where: { id: generatedCv.userId }, select: { fullName: true, email: true } }),
     prisma.profile.findUnique({
-      where: { userId },
+      where: { userId: generatedCv.userId },
       select: {
         location: true,
         phone: true,
@@ -22,10 +33,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       },
     }),
   ]);
-
-  if (!generatedCv || generatedCv.userId !== userId) {
-    return Response.json({ error: "Nie znaleziono CV." }, { status: 404 });
-  }
 
   const parsed = GeneratedCvContentSchema.safeParse(generatedCv.contentJson);
   if (!parsed.success) {

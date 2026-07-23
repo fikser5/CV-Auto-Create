@@ -73,6 +73,7 @@ export async function POST(request: Request) {
   let content;
   try {
     content = await generateCvContent(
+      userId,
       {
         headline: profile.headline,
         summary: profile.summary,
