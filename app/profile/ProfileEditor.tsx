@@ -14,6 +14,8 @@ import {
   GlobeIcon,
   CameraIcon,
   CheckCircleIcon,
+  WandIcon,
+  SparklesIcon,
 } from "@/app/components/icons";
 
 type SkillLevel = (typeof SkillLevels)[number];
@@ -230,6 +232,70 @@ export function ProfileEditor({ initialData }: { initialData: InitialData }) {
   const [languagePending, setLanguagePending] = useState(false);
   const [languageError, setLanguageError] = useState<string | null>(null);
 
+  const [importPending, setImportPending] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importStatus, setImportStatus] = useState<string | null>(null);
+
+  async function handleCvImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setImportError(null);
+    setImportStatus(null);
+    setImportPending(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await withTimeout(
+        fetch("/api/profile/import-cv", { method: "POST", body: formData }),
+        60000,
+        "Odczyt CV trwa zbyt długo. Spróbuj ponownie.",
+      );
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.error || "Nie udało się zaimportować CV.");
+      }
+      const data: {
+        profile: { headline: string | null; summary: string | null; location: string | null; phone: string | null; linkedinUrl: string | null };
+        experiences: Experience[];
+        education: Education[];
+        skills: Skill[];
+        interests: Interest[];
+        languages: Language[];
+      } = await response.json();
+
+      setGeneral((prev) => ({
+        headline: prev.headline || data.profile.headline || "",
+        summary: prev.summary || data.profile.summary || "",
+        location: prev.location || data.profile.location || "",
+        phone: prev.phone || data.profile.phone || "",
+        linkedinUrl: prev.linkedinUrl || data.profile.linkedinUrl || "",
+      }));
+      setExperiences((prev) => [...prev, ...data.experiences]);
+      setEducation((prev) => [...prev, ...data.education]);
+      setSkills((prev) => [...prev, ...data.skills]);
+      setInterests((prev) => [...prev, ...data.interests]);
+      setLanguages((prev) => [...prev, ...data.languages]);
+
+      const parts: string[] = [];
+      if (data.experiences.length) parts.push(`${data.experiences.length} doświadczenie`);
+      if (data.education.length) parts.push(`${data.education.length} wykształcenie`);
+      if (data.skills.length) parts.push(`${data.skills.length} umiejętności`);
+      if (data.interests.length) parts.push(`${data.interests.length} zainteresowania`);
+      if (data.languages.length) parts.push(`${data.languages.length} języki`);
+      setImportStatus(
+        parts.length > 0
+          ? `Zaimportowano: ${parts.join(", ")}. Sprawdź poniżej i popraw, jeśli trzeba.`
+          : "Nie znaleziono w pliku nowych danych do zaimportowania.",
+      );
+    } catch (error) {
+      setImportError(error instanceof Error ? error.message : "Błąd importu CV.");
+    } finally {
+      setImportPending(false);
+    }
+  }
+
   async function handlePhotoSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -400,6 +466,59 @@ export function ProfileEditor({ initialData }: { initialData: InitialData }) {
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Import CV */}
+      <section className={`${card} flex flex-col gap-4 border-primary/30`}>
+        <div className="flex items-start gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-brand text-primary-foreground">
+            <WandIcon className="h-5 w-5" />
+          </span>
+          <div>
+            <h2 className="font-semibold">Masz już CV? Zaimportuj je jednym kliknięciem</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Wgraj plik PDF ze swoim aktualnym CV, a AI automatycznie uzupełni pola poniżej —
+              doświadczenie, wykształcenie, umiejętności, zainteresowania i języki. Nic nie znika:
+              dane dopisywane są do tego, co już masz, a wszystko możesz później poprawić lub usunąć.
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative">
+            <span aria-hidden className={`${buttonPrimary} ${importPending ? "cursor-not-allowed opacity-50" : ""}`}>
+              {importPending ? "Odczytywanie CV…" : "Wgraj CV (PDF)"}
+            </span>
+            <input
+              type="file"
+              accept="application/pdf"
+              disabled={importPending}
+              onChange={handleCvImport}
+              aria-label="Wgraj plik CV w formacie PDF"
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+            />
+          </div>
+          {importPending && (
+            <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+              <span className="h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              To może potrwać do minuty…
+            </span>
+          )}
+        </div>
+        {importStatus && (
+          <p className="flex items-center gap-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+            <CheckCircleIcon className="h-4 w-4 shrink-0" />
+            {importStatus}
+          </p>
+        )}
+        {importError && <p className={errorText}>{importError}</p>}
+      </section>
+
+      <div className="flex items-start gap-2.5 rounded-card border border-dashed border-border p-4 text-sm text-muted-foreground">
+        <SparklesIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+        <p>
+          Im więcej realnych szczegółów tu dodasz — doświadczeń, umiejętności, osiągnięć — tym
+          trafniej AI dopasuje Twoje CV do każdej oferty. Warto uzupełnić profil jak najmocniej.
+        </p>
+      </div>
+
       {/* Dane ogólne */}
       <section className={`${card} flex flex-col gap-4`}>
         <SectionTitle icon={UserIcon}>Dane ogólne</SectionTitle>
