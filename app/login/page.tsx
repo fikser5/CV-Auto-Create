@@ -41,6 +41,7 @@ export default function LoginPage() {
               name="email"
               type="email"
               placeholder="jan@example.com"
+              defaultValue={state?.email ?? ""}
               className={input}
             />
           </div>

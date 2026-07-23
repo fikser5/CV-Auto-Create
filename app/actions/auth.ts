@@ -66,21 +66,30 @@ export async function registerUser(
   });
 }
 
-export type LoginFormState = { message?: string } | undefined;
+export type LoginFormState = { message?: string; email?: string } | undefined;
 
 export async function loginUser(
   _state: LoginFormState,
   formData: FormData,
 ): Promise<LoginFormState> {
+  const email = String(formData.get("email") ?? "");
+  const password = String(formData.get("password") ?? "");
+
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) {
+    return { message: "Nie ma konta z tym adresem e-mail.", email };
+  }
+
+  const passwordsMatch = await bcrypt.compare(password, user.passwordHash);
+  if (!passwordsMatch) {
+    return { message: "Nieprawidłowe hasło.", email };
+  }
+
   try {
-    await signIn("credentials", {
-      email: formData.get("email"),
-      password: formData.get("password"),
-      redirectTo: "/dashboard",
-    });
+    await signIn("credentials", { email, password, redirectTo: "/dashboard" });
   } catch (error) {
     if (error instanceof AuthError) {
-      return { message: "Nieprawidłowy e-mail lub hasło." };
+      return { message: "Nie udało się zalogować. Spróbuj ponownie.", email };
     }
     throw error;
   }

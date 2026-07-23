@@ -59,6 +59,9 @@ export default function RegisterPage() {
               Hasło
             </label>
             <input id="password" name="password" type="password" className={input} />
+            <p className="text-xs text-muted-foreground">
+              Min. 8 znaków, w tym co najmniej jedna litera i jedna cyfra.
+            </p>
             {state?.errors?.password && (
               <ul className={errorText}>
                 {state.errors.password.map((error) => (
