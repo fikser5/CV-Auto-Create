@@ -29,13 +29,14 @@ export default async function CvHistoryPage() {
       purchasedCredits: true,
       hasEverPurchased: true,
       emailVerifiedAt: true,
+      isAdmin: true,
     },
   });
 
   if (!canViewHistory(user)) {
     return (
       <>
-        <AppNav />
+        <AppNav isAdmin={user.isAdmin} />
         <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-12">
           <div>
             <span className={eyebrow}>Historia</span>
@@ -69,7 +70,7 @@ export default async function CvHistoryPage() {
 
   return (
     <>
-      <AppNav />
+      <AppNav isAdmin={user.isAdmin} />
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-12">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>

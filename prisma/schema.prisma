@@ -56,6 +56,10 @@ model User {
   // one a real Claude API cost. Existing accounts are backfilled to their
   // createdAt on migration so nobody already using the app gets locked out.
   emailVerifiedAt    DateTime? @map("email_verified_at")
+  // Gates /admin and the admin API routes — checked fresh from the DB on every
+  // request (not embedded in the JWT), same pattern as plan/verification
+  // checks elsewhere, so revoking access takes effect immediately.
+  isAdmin      Boolean  @default(false) @map("is_admin")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 

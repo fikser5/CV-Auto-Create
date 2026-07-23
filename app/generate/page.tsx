@@ -20,6 +20,7 @@ export default async function GeneratePage() {
       purchasedCredits: true,
       hasEverPurchased: true,
       emailVerifiedAt: true,
+      isAdmin: true,
     },
   });
 
@@ -29,7 +30,7 @@ export default async function GeneratePage() {
     const isEmailIssue = allowance.reason === "email_not_verified";
     return (
       <>
-        <AppNav />
+        <AppNav isAdmin={user.isAdmin} />
         <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-6 py-12">
           <div>
             <span className={eyebrow}>Krok 2</span>
@@ -76,7 +77,7 @@ export default async function GeneratePage() {
 
   return (
     <>
-      <AppNav />
+      <AppNav isAdmin={user.isAdmin} />
       <GenerateForm />
     </>
   );

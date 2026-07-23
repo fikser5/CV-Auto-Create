@@ -24,6 +24,12 @@
   --blue-soft-foreground: #1d4ed8;
   --danger: #dc2626;
   --danger-soft: #fef2f2;
+  /* Admin charts: categorical pair validated with the dataviz skill's
+     six-check script (light: `#6d28d9,#be123c` — all checks pass). Kept as
+     dedicated tokens rather than reusing --primary/--rose directly so the
+     chart palette can be retuned without touching brand-gradient colors. */
+  --chart-premium: #6d28d9;
+  --chart-free: #be123c;
   --radius: 0.75rem;
   /* Ambient dot-grid + hover glow read blue — the brand gradient (still
      violet -> rose) stays the warm accent that pops against it. */
@@ -66,6 +72,8 @@
   --wash-1: #f5f2ea;
   --wash-2: #edeeee;
   --wash-3: #dbe7fb;
+  --chart-premium: #6d28d9;
+  --chart-free: #be123c;
 }
 
 :root[data-theme="dark"] {
@@ -93,6 +101,8 @@
   --wash-1: #0b0710;
   --wash-2: #0b0710;
   --wash-3: #0b0710;
+  --chart-premium: #8b5cf6;
+  --chart-free: #f43f5e;
 }
 
 @theme inline {
@@ -115,6 +125,8 @@
   --color-blue-soft-foreground: var(--blue-soft-foreground);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
+  --color-chart-premium: var(--chart-premium);
+  --color-chart-free: var(--chart-free);
   --radius-card: var(--radius);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);

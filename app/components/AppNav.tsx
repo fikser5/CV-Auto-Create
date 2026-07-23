@@ -12,8 +12,9 @@ const links = [
   { href: "/cv", label: "Historia CV" },
 ];
 
-export function AppNav() {
+export function AppNav({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
+  const visibleLinks = isAdmin ? [...links, { href: "/admin", label: "Admin" }] : links;
 
   return (
     <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur print:hidden">
@@ -26,7 +27,7 @@ export function AppNav() {
         </Link>
 
         <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
-          {links.map((link) => {
+          {visibleLinks.map((link) => {
             const active = pathname === link.href || pathname?.startsWith(link.href + "/");
             return (
               <Link

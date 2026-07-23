@@ -102,6 +102,7 @@ export default async function CvPage({ params }: { params: Promise<{ id: string 
         purchasedCredits: true,
         hasEverPurchased: true,
         emailVerifiedAt: true,
+        isAdmin: true,
       },
     }),
     prisma.profile.findUnique({
@@ -130,7 +131,7 @@ export default async function CvPage({ params }: { params: Promise<{ id: string 
 
   return (
     <>
-      <AppNav />
+      <AppNav isAdmin={user.isAdmin} />
       <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-12 print:p-0">
         <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
           <div>

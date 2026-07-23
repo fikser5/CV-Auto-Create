@@ -47,6 +47,7 @@ export default async function DashboardPage({
         purchasedCredits: true,
         hasEverPurchased: true,
         emailVerifiedAt: true,
+        isAdmin: true,
       },
     }),
     prisma.profile.findUnique({
@@ -62,7 +63,7 @@ export default async function DashboardPage({
 
   return (
     <>
-      <AppNav />
+      <AppNav isAdmin={user.isAdmin} />
       <main className="relative mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-12">
         <div
           aria-hidden

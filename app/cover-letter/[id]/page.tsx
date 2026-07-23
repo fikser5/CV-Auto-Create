@@ -13,7 +13,7 @@ export default async function CoverLetterPage({ params }: { params: Promise<{ id
 
   const [generatedCoverLetter, user, profile] = await Promise.all([
     prisma.generatedCoverLetter.findUnique({ where: { id }, include: { jobPosting: true } }),
-    prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { fullName: true, email: true } }),
+    prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { fullName: true, email: true, isAdmin: true } }),
     prisma.profile.findUnique({ where: { userId }, select: { location: true, phone: true } }),
   ]);
 
@@ -34,7 +34,7 @@ export default async function CoverLetterPage({ params }: { params: Promise<{ id
 
   return (
     <>
-      <AppNav />
+      <AppNav isAdmin={user.isAdmin} />
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-12 print:p-0">
         <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
           <div>

@@ -14,16 +14,19 @@ function toDateInputValue(date: Date | null): string {
 export default async function ProfilePage() {
   const { userId } = await verifySession();
 
-  const profile = await prisma.profile.findUnique({
-    where: { userId },
-    include: {
-      experiences: { orderBy: { orderIndex: "asc" } },
-      education: true,
-      skills: true,
-      interests: true,
-      languages: { orderBy: { orderIndex: "asc" } },
-    },
-  });
+  const [profile, user] = await Promise.all([
+    prisma.profile.findUnique({
+      where: { userId },
+      include: {
+        experiences: { orderBy: { orderIndex: "asc" } },
+        education: true,
+        skills: true,
+        interests: true,
+        languages: { orderBy: { orderIndex: "asc" } },
+      },
+    }),
+    prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { isAdmin: true } }),
+  ]);
 
   const initialData = {
     headline: profile?.headline ?? "",
@@ -59,7 +62,7 @@ export default async function ProfilePage() {
 
   return (
     <>
-      <AppNav />
+      <AppNav isAdmin={user.isAdmin} />
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-12">
         <div>
           <span className={eyebrow}>Krok 1</span>
