@@ -1,10 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  /* Cool blue-grey neutrals (not violet-tinted) so white cards actually
-     separate from the page background instead of blending into it, and so
-     the violet/rose brand accents pop against a calmer backdrop. */
-  --background: #f4f7fc;
+  /* Dirty-white neutrals (warm greige, not clinical near-white) so the page
+     itself has some body to it, plus a body-level gradient wash (see
+     `body::before` below) that moves from that warm greige into pale blue —
+     the blue is genuine new color, not just a cooled-down grey. */
+  --background: #f1efe9;
   --foreground: #161b26;
   --card: #ffffff;
   --card-foreground: #161b26;
@@ -24,10 +25,15 @@
   --danger: #dc2626;
   --danger-soft: #fef2f2;
   --radius: 0.75rem;
-  /* Ambient dot-grid + hover glow now read cool/blue instead of violet — the
-     brand gradient (still violet -> rose) stays the warm accent that pops. */
-  --grid-line: rgba(37, 99, 235, 0.08);
+  /* Ambient dot-grid + hover glow read blue — the brand gradient (still
+     violet -> rose) stays the warm accent that pops against it. */
+  --grid-line: rgba(37, 99, 235, 0.1);
   --glow: rgba(37, 99, 235, 0.16);
+  /* Corner-to-corner page wash, warm dirty-white -> pale blue. Fixed behind
+     content via `body::before`, see below. */
+  --wash-1: #f5f2ea;
+  --wash-2: #edeeee;
+  --wash-3: #dbe7fb;
 }
 
 /* Light is the automatic default regardless of OS/browser color-scheme
@@ -36,7 +42,7 @@
    sets data-theme="dark" on <html> (persisted to localStorage, read back in
    app/layout.tsx's inline script before paint). */
 :root[data-theme="light"] {
-  --background: #f4f7fc;
+  --background: #f1efe9;
   --foreground: #161b26;
   --card: #ffffff;
   --card-foreground: #161b26;
@@ -55,8 +61,11 @@
   --blue-soft-foreground: #1d4ed8;
   --danger: #dc2626;
   --danger-soft: #fef2f2;
-  --grid-line: rgba(37, 99, 235, 0.08);
+  --grid-line: rgba(37, 99, 235, 0.1);
   --glow: rgba(37, 99, 235, 0.16);
+  --wash-1: #f5f2ea;
+  --wash-2: #edeeee;
+  --wash-3: #dbe7fb;
 }
 
 :root[data-theme="dark"] {
@@ -81,6 +90,9 @@
   --danger-soft: #450a0a;
   --grid-line: rgba(167, 139, 250, 0.08);
   --glow: rgba(167, 139, 250, 0.25);
+  --wash-1: #0b0710;
+  --wash-2: #0b0710;
+  --wash-3: #0b0710;
 }
 
 @theme inline {
@@ -112,8 +124,26 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  background-image: radial-gradient(circle, var(--grid-line) 1px, transparent 1px);
-  background-size: 28px 28px;
+  position: relative;
+}
+
+/* Corner-to-corner gradient wash + dot-grid texture, pinned behind all
+   content via `position: fixed` (not `background-attachment: fixed` on body
+   directly — that has known scroll/repaint quirks on mobile Safari, see the
+   allowedDevOrigins saga for how much mobile weirdness has already bitten
+   this project). Sits behind everything at z-index -1; page sections that
+   want their own stronger blob (landing hero) layer on top independently. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    radial-gradient(circle, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(135deg, var(--wash-1) 0%, var(--wash-2) 50%, var(--wash-3) 100%);
+  background-size:
+    28px 28px,
+    100% 100%;
 }
 
 ::selection {
