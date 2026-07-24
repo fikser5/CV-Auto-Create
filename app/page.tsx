@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { buttonPrimary, buttonSecondary, badge, eyebrow } from "@/lib/ui";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
+import { getCvTemplate } from "@/lib/cv-templates";
+import { CvTemplatePreview, type CvPreviewData } from "@/app/cv/[id]/templates";
 import {
   SparklesIcon,
   ShieldCheckIcon,
@@ -14,6 +16,148 @@ import {
   WandIcon,
   CrownIcon,
 } from "@/app/components/icons";
+
+// Fictional data purely to showcase visual template variety — never implies
+// these are real users.
+const landingCvExamples: { templateId: string; data: CvPreviewData }[] = [
+  {
+    templateId: "classic-teal",
+    data: {
+      fullName: "Jan Kowalski",
+      email: "jan.kowalski@example.com",
+      phone: "+48 600 123 456",
+      location: "Warszawa",
+      linkedinUrl: "linkedin.com/in/jankowalski",
+      photoUrl: null,
+      headline: "Frontend Developer",
+      summary:
+        "Frontend developer z 5-letnim doświadczeniem w tworzeniu wydajnych aplikacji webowych w React i TypeScript. Skupiony na dostępności, wydajności i czytelnym kodzie.",
+      experience: [
+        {
+          company: "TechFlow Sp. z o.o.",
+          position: "Senior Frontend Developer",
+          period: "2022 - obecnie",
+          highlights: [
+            "Prowadziłem rozwój platformy e-commerce obsługującej 200 tys. użytkowników miesięcznie",
+            "Skróciłem czas ładowania aplikacji o 40% dzięki optymalizacji renderowania",
+            "Wdrożyłem system komponentów używany przez 4 zespoły produktowe",
+          ],
+        },
+        {
+          company: "WebNova",
+          position: "Frontend Developer",
+          period: "2019 - 2022",
+          highlights: [
+            "Współtworzyłem aplikację SPA w React i Redux dla klienta z branży finansowej",
+            "Zredukowałem liczbę zgłaszanych błędów UI o 30% dzięki testom komponentów",
+          ],
+        },
+      ],
+      education: [{ school: "Politechnika Warszawska", degree: "Informatyka, inż.", period: "2015 - 2019" }],
+      skills: ["React", "TypeScript", "Next.js", "Tailwind CSS", "GraphQL"],
+      softSkills: ["Praca zespołowa", "Mentoring", "Komunikacja"],
+      languages: [
+        { id: "l1", name: "Angielski", level: "C1" },
+        { id: "l2", name: "Niemiecki", level: "B1" },
+      ],
+      matchScore: 0,
+      matchSummary: "",
+      detectedJobTitle: "",
+      detectedCompanyName: "",
+    },
+  },
+  {
+    templateId: "sky-minimal",
+    data: {
+      fullName: "Anna Nowak",
+      email: "anna.nowak@example.com",
+      phone: "+48 512 987 654",
+      location: "Kraków",
+      linkedinUrl: "linkedin.com/in/annanowak",
+      photoUrl: null,
+      headline: "Marketing Manager",
+      summary:
+        "Specjalistka marketingu z doświadczeniem w prowadzeniu kampanii wielokanałowych i budowaniu marki dla firm z branży e-commerce i SaaS.",
+      experience: [
+        {
+          company: "BrightMark",
+          position: "Marketing Manager",
+          period: "2021 - obecnie",
+          highlights: [
+            "Zwiększyłam ruch organiczny o 65% w ciągu 12 miesięcy",
+            "Zarządzałam budżetem reklamowym 500 tys. zł rocznie",
+            "Zbudowałam zespół 4 specjalistów ds. marketingu",
+          ],
+        },
+        {
+          company: "AdVenture",
+          position: "Specjalista ds. marketingu",
+          period: "2018 - 2021",
+          highlights: [
+            "Prowadziłam kampanie w Google Ads i Meta Ads dla 15 klientów",
+            "Podniosłam współczynnik konwersji kampanii o 22%",
+          ],
+        },
+      ],
+      education: [
+        { school: "Uniwersytet Ekonomiczny w Krakowie", degree: "Marketing i komunikacja rynkowa, mgr", period: "2014 - 2018" },
+      ],
+      skills: ["Google Ads", "SEO", "Marketing automation", "Analiza danych", "HubSpot"],
+      softSkills: ["Zarządzanie zespołem", "Kreatywność", "Negocjacje"],
+      languages: [
+        { id: "l1", name: "Angielski", level: "C2" },
+        { id: "l2", name: "Hiszpański", level: "A2" },
+      ],
+      matchScore: 0,
+      matchSummary: "",
+      detectedJobTitle: "",
+      detectedCompanyName: "",
+    },
+  },
+  {
+    templateId: "slate-timeline",
+    data: {
+      fullName: "Piotr Zieliński",
+      email: "piotr.zielinski@example.com",
+      phone: "+48 789 456 123",
+      location: "Wrocław",
+      linkedinUrl: "linkedin.com/in/piotrzielinski",
+      photoUrl: null,
+      headline: "Data Analyst",
+      summary:
+        "Analityk danych specjalizujący się w analizie biznesowej i wizualizacji danych. Wspieram decyzje produktowe konkretnymi liczbami, nie przeczuciami.",
+      experience: [
+        {
+          company: "DataSphere",
+          position: "Data Analyst",
+          period: "2021 - obecnie",
+          highlights: [
+            "Zbudowałem dashboard sprzedażowy używany codziennie przez zarząd",
+            "Zautomatyzowałem raportowanie, oszczędzając zespołowi 10 godzin tygodniowo",
+            "Przeprowadziłem analizę odpływu klientów, która obniżyła churn o 8%",
+          ],
+        },
+        {
+          company: "FinTech Solutions",
+          position: "Junior Data Analyst",
+          period: "2019 - 2021",
+          highlights: [
+            "Tworzyłem raporty SQL na potrzeby zespołu finansowego",
+            "Wspierałem migrację danych do hurtowni danych opartej o BigQuery",
+          ],
+        },
+      ],
+      education: [{ school: "Uniwersytet Wrocławski", degree: "Matematyka stosowana, mgr", period: "2015 - 2019" }],
+      skills: ["SQL", "Python", "Power BI", "BigQuery", "Excel"],
+      softSkills: ["Analityczne myślenie", "Komunikacja wyników", "Dokładność"],
+      languages: [{ id: "l1", name: "Angielski", level: "B2" }],
+      matchScore: 0,
+      matchSummary: "",
+      detectedJobTitle: "",
+      detectedCompanyName: "",
+    },
+  },
+];
 
 const trustItems = [
   "Zero zmyślania — tylko Twoje prawdziwe dane",
@@ -340,6 +484,39 @@ export default function Home() {
               </p>
             </div>
           </div>
+        </section>
+
+        {/* Szablony CV */}
+        <section className="mt-32 w-full max-w-5xl">
+          <div className="flex flex-col items-center text-center">
+            <span className={eyebrow}>Szablony</span>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight">10 stylów CV do wyboru w planie Premium</h2>
+            <p className="mt-3 max-w-xl text-muted-foreground">
+              Ta sama treść, dopasowana do oferty — w wyglądzie, który pasuje do branży i Twojego stylu. Poniżej
+              przykłady na fikcyjnych danych.
+            </p>
+          </div>
+
+          <div className="mt-14 grid grid-cols-1 place-items-center gap-10 sm:grid-cols-3">
+            {landingCvExamples.map((example) => {
+              const template = getCvTemplate(example.templateId);
+              return (
+                <div key={example.templateId} className="flex flex-col items-center gap-3">
+                  <div className="card-hover relative w-[240px] overflow-hidden rounded-card border border-border shadow-lg" style={{ aspectRatio: "210 / 297" }}>
+                    <div className="absolute left-0 top-0 origin-top-left" style={{ width: 900, transform: "scale(0.2667)" }}>
+                      <CvTemplatePreview cv={example.data} colors={template.colors} layout={template.layout} />
+                    </div>
+                  </div>
+                  <span className="text-sm font-medium text-muted-foreground">{template.name}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="mt-10 text-center text-sm text-muted-foreground">
+            + 7 kolejnych stylów, wszystkie dostępne w planie Premium — zmienisz wygląd w każdej chwili, bez
+            ponownego generowania CV.
+          </p>
         </section>
 
         {/* Cennik */}

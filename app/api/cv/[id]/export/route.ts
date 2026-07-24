@@ -39,16 +39,19 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     return Response.json({ error: "Zapisana treść CV ma nieoczekiwany format." }, { status: 500 });
   }
 
-  const pdfBuffer = await renderCvToPdfBuffer({
-    ...parsed.data,
-    fullName: user.fullName,
-    email: user.email,
-    phone: profile?.phone ?? null,
-    location: profile?.location ?? null,
-    linkedinUrl: profile?.linkedinUrl ?? null,
-    photoUrl: profile?.photoUrl ?? null,
-    languages: profile?.languages ?? [],
-  });
+  const pdfBuffer = await renderCvToPdfBuffer(
+    {
+      ...parsed.data,
+      fullName: user.fullName,
+      email: user.email,
+      phone: profile?.phone ?? null,
+      location: profile?.location ?? null,
+      linkedinUrl: profile?.linkedinUrl ?? null,
+      photoUrl: profile?.photoUrl ?? null,
+      languages: profile?.languages ?? [],
+    },
+    generatedCv.templateId,
+  );
 
   return new Response(new Uint8Array(pdfBuffer), {
     headers: {

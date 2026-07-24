@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/api-auth";
 import { generateCvContent } from "@/lib/claude";
 import { checkGenerationAllowance, consumeGenerationAllowance } from "@/lib/plan";
+import { DEFAULT_TEMPLATE_ID } from "@/lib/cv-templates";
 
 export async function POST(request: Request) {
   const userId = await requireUserId();
@@ -116,7 +117,7 @@ export async function POST(request: Request) {
       userId,
       jobPostingId,
       contentJson: content,
-      templateId: "default",
+      templateId: DEFAULT_TEMPLATE_ID,
       version: version + 1,
     },
   });
