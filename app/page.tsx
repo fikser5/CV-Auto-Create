@@ -243,6 +243,14 @@ const faq = [
     q: "Czy moje dane są bezpieczne?",
     a: "Tak — dane trafiają wyłącznie do Twojego konta i są wykorzystywane tylko do generowania Twoich CV.",
   },
+  {
+    q: "Czy CV z CVAutomat przejdzie przez systemy ATS rekrutacyjne?",
+    a: "Tak — eksportowany PDF ma czystą, uporządkowaną strukturę tekstową (bez tabel czy grafik utrudniających odczyt), którą standardowo obsługują systemy śledzenia kandydatów.",
+  },
+  {
+    q: "Czy mogę zmienić wygląd CV albo poprawić treść przed pobraniem?",
+    a: "Tak — w planie Premium wybierasz jeden z 10 stylów wizualnych i możesz edytować treść (nagłówek, opisy doświadczenia, umiejętności) bezpośrednio na stronie CV, zanim pobierzesz gotowy PDF.",
+  },
 ];
 
 const pricingPlans = [

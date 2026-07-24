@@ -15,11 +15,19 @@ export function GenerateCoverLetterButton({ jobPostingId }: { jobPostingId: stri
     setPending(true);
     setError(null);
     setStatusMessage("Generowanie listu motywacyjnego… (może potrwać do kilkunastu sekund)");
+
+    // Render's free tier occasionally has a slow cold start — without a
+    // timeout, a hung request leaves the user staring at "generowanie…"
+    // indefinitely with no way to know whether to keep waiting or retry.
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 45_000);
+
     try {
       const res = await fetch("/api/generate-cover-letter", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jobPostingId }),
+        signal: controller.signal,
       });
       const data = await res.json();
       if (!res.ok) {
@@ -32,9 +40,19 @@ export function GenerateCoverLetterButton({ jobPostingId }: { jobPostingId: stri
       await new Promise((resolve) => setTimeout(resolve, 600));
       router.push(`/cover-letter/${data.generatedCoverLetter.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Wystąpił nieoczekiwany błąd.");
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setError("To trwa dłużej niż zwykle — serwer mógł się właśnie wybudzać. Spróbuj ponownie za chwilę.");
+      } else if (err instanceof TypeError) {
+        // A raw "Failed to fetch" is a browser-level network error, not
+        // something a user can act on — translate it to plain Polish.
+        setError("Problem z połączeniem. Sprawdź internet i spróbuj ponownie.");
+      } else {
+        setError(err instanceof Error ? err.message : "Wystąpił nieoczekiwany błąd.");
+      }
       setStatusMessage(null);
       setPending(false);
+    } finally {
+      clearTimeout(timeout);
     }
   }
 
@@ -56,9 +74,9 @@ export function GenerateCoverLetterButton({ jobPostingId }: { jobPostingId: stri
       )}
       <button type="button" onClick={handleClick} disabled={pending} className={buttonSecondary}>
         <FileTextIcon className="h-4 w-4" />
-        {pending ? "Generowanie…" : "Wygeneruj list motywacyjny"}
+        {pending ? "Generowanie…" : error ? "Spróbuj ponownie" : "Wygeneruj list motywacyjny"}
       </button>
-      {error && <p className="text-xs text-danger">{error}</p>}
+      {error && <p className="max-w-64 text-right text-xs text-danger">{error}</p>}
     </div>
   );
 }

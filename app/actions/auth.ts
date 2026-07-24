@@ -168,6 +168,7 @@ export async function resendVerificationEmail(): Promise<void> {
     await sendVerificationEmail(user.email, user.fullName, `${baseUrl}/verify-email?token=${token}`);
   } catch (error) {
     console.error("Nie udało się wysłać e-maila weryfikacyjnego:", error);
+    redirect("/dashboard?verification=error");
   }
 
   redirect("/dashboard?verification=sent");

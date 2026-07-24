@@ -82,19 +82,33 @@ export default async function DashboardPage({
         </div>
 
         {!planStatus.emailVerified && (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-primary/30 bg-accent-soft p-5">
+          <div
+            className={`flex flex-wrap items-center justify-between gap-3 rounded-card border p-5 ${
+              verification === "error" ? "border-danger/30 bg-danger-soft" : "border-primary/30 bg-accent-soft"
+            }`}
+          >
             <div className="flex items-start gap-3">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-card text-accent-soft-foreground">
+              <span
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-card ${
+                  verification === "error" ? "text-danger" : "text-accent-soft-foreground"
+                }`}
+              >
                 <MailIcon className="h-4 w-4" />
               </span>
               <div>
-                <p className="text-sm font-semibold text-accent-soft-foreground">
-                  {verification === "sent" ? "Link wysłany ponownie" : "Potwierdź adres e-mail"}
+                <p className={`text-sm font-semibold ${verification === "error" ? "text-danger" : "text-accent-soft-foreground"}`}>
+                  {verification === "sent"
+                    ? "Link wysłany ponownie"
+                    : verification === "error"
+                      ? "Nie udało się wysłać maila"
+                      : "Potwierdź adres e-mail"}
                 </p>
-                <p className="mt-0.5 text-sm text-accent-soft-foreground">
+                <p className={`mt-0.5 text-sm ${verification === "error" ? "text-danger" : "text-accent-soft-foreground"}`}>
                   {verification === "sent"
                     ? "Sprawdź skrzynkę (też SPAM) i kliknij link, żeby odblokować generowanie CV."
-                    : "Sprawdź skrzynkę i kliknij link, żeby móc generować CV."}
+                    : verification === "error"
+                      ? "Wystąpił błąd przy wysyłce. Spróbuj ponownie za chwilę."
+                      : "Sprawdź skrzynkę i kliknij link, żeby móc generować CV."}
                 </p>
               </div>
             </div>
