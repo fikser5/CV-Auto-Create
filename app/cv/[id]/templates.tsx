@@ -1,6 +1,6 @@
 import type { GeneratedCvContent } from "@/lib/cv-schema";
 import { LanguageLevelLabels, LanguageLevelBars, type LanguageLevels } from "@/lib/definitions";
-import type { CvThemeColors } from "@/lib/cv-templates";
+import { normalizeExternalUrl, type CvThemeColors } from "@/lib/cv-templates";
 import { MapPinIcon, PhoneIcon, MailIcon, GlobeIcon } from "@/app/components/icons";
 
 // HTML/Tailwind mirror of lib/cv-pdf.tsx's three layouts — same CvThemeColors
@@ -70,7 +70,14 @@ function SidebarPhotoPreview({ cv, c }: { cv: CvPreviewData; c: CvThemeColors })
               {cv.location && <div className="flex items-start gap-2"><MapPinIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: c.accent }} /><span>{cv.location}</span></div>}
               {cv.phone && <div className="flex items-start gap-2"><PhoneIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: c.accent }} /><span>{cv.phone}</span></div>}
               <div className="flex items-start gap-2"><MailIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: c.accent }} /><span className="break-all">{cv.email}</span></div>
-              {cv.linkedinUrl && <div className="flex items-start gap-2"><GlobeIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: c.accent }} /><span className="break-all">{cv.linkedinUrl}</span></div>}
+              {cv.linkedinUrl && (
+                <div className="flex items-start gap-2">
+                  <GlobeIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: c.accent }} />
+                  <a href={normalizeExternalUrl(cv.linkedinUrl)} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: c.accent }}>
+                    LinkedIn
+                  </a>
+                </div>
+              )}
             </div>
           </div>
 
@@ -191,7 +198,14 @@ function MinimalPreview({ cv, c }: { cv: CvPreviewData; c: CvThemeColors }) {
         {cv.location && <span className="flex items-center gap-1.5"><MapPinIcon className="h-3.5 w-3.5" style={{ color: c.accent }} />{cv.location}</span>}
         {cv.phone && <span className="flex items-center gap-1.5"><PhoneIcon className="h-3.5 w-3.5" style={{ color: c.accent }} />{cv.phone}</span>}
         <span className="flex items-center gap-1.5"><MailIcon className="h-3.5 w-3.5" style={{ color: c.accent }} />{cv.email}</span>
-        {cv.linkedinUrl && <span className="flex items-center gap-1.5"><GlobeIcon className="h-3.5 w-3.5" style={{ color: c.accent }} />{cv.linkedinUrl}</span>}
+        {cv.linkedinUrl && (
+          <span className="flex items-center gap-1.5">
+            <GlobeIcon className="h-3.5 w-3.5" style={{ color: c.accent }} />
+            <a href={normalizeExternalUrl(cv.linkedinUrl)} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: c.accent }}>
+              LinkedIn
+            </a>
+          </span>
+        )}
       </div>
 
       <div className="flex flex-col gap-6">
@@ -300,7 +314,14 @@ function TimelinePreview({ cv, c }: { cv: CvPreviewData; c: CvThemeColors }) {
           {cv.location && <div className="flex items-start gap-2"><MapPinIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: c.bannerAccent }} /><span>{cv.location}</span></div>}
           {cv.phone && <div className="flex items-start gap-2"><PhoneIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: c.bannerAccent }} /><span>{cv.phone}</span></div>}
           <div className="flex items-start gap-2"><MailIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: c.bannerAccent }} /><span className="break-all">{cv.email}</span></div>
-          {cv.linkedinUrl && <div className="flex items-start gap-2"><GlobeIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: c.bannerAccent }} /><span className="break-all">{cv.linkedinUrl}</span></div>}
+          {cv.linkedinUrl && (
+            <div className="flex items-start gap-2">
+              <GlobeIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" style={{ color: c.bannerAccent }} />
+              <a href={normalizeExternalUrl(cv.linkedinUrl)} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: c.bannerAccent }}>
+                LinkedIn
+              </a>
+            </div>
+          )}
         </div>
 
         {cv.skills.length > 0 && (

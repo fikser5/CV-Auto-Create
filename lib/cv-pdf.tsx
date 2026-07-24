@@ -1,9 +1,9 @@
 import path from "node:path";
-import { Document, Page, Text, View, Image, StyleSheet, Font, renderToBuffer } from "@react-pdf/renderer";
+import { Document, Page, Text, View, Image, Link, StyleSheet, Font, renderToBuffer } from "@react-pdf/renderer";
 import type { GeneratedCvContent } from "@/lib/cv-schema";
 import { LanguageLevelLabels, LanguageLevelBars, type LanguageLevels } from "@/lib/definitions";
 import { PdfPinIcon, PdfPhoneIcon, PdfMailIcon, PdfGlobeIcon } from "@/lib/pdf-icons";
-import { getCvTemplate, type CvThemeColors, type CvLayout } from "@/lib/cv-templates";
+import { getCvTemplate, normalizeExternalUrl, type CvThemeColors, type CvLayout } from "@/lib/cv-templates";
 
 // Helvetica (PDF standard font) has no Polish diacritics (ą ć ę ł ń ó ś ź ż) —
 // Open Sans is embedded explicitly so exported CVs render Polish text correctly.
@@ -141,7 +141,9 @@ function SidebarPhotoDocument({ cv, c }: { cv: CvRenderData; c: CvThemeColors })
             {cv.linkedinUrl && (
               <View style={s.contactRow}>
                 <View style={s.contactIcon}><PdfGlobeIcon color={c.accent} /></View>
-                <Text style={s.contactText}>{cv.linkedinUrl}</Text>
+                <Link src={normalizeExternalUrl(cv.linkedinUrl)} style={[s.contactText, { color: c.accent, textDecoration: "underline" }]}>
+                  LinkedIn
+                </Link>
               </View>
             )}
             {cv.skills.length > 0 && (
@@ -288,7 +290,12 @@ function MinimalDocument({ cv, c }: { cv: CvRenderData; c: CvThemeColors }) {
         )}
         <View style={s.contactItem}><View style={s.contactIcon}><PdfMailIcon color={c.accent} /></View><Text style={s.contactText}>{cv.email}</Text></View>
         {cv.linkedinUrl && (
-          <View style={s.contactItem}><View style={s.contactIcon}><PdfGlobeIcon color={c.accent} /></View><Text style={s.contactText}>{cv.linkedinUrl}</Text></View>
+          <View style={s.contactItem}>
+            <View style={s.contactIcon}><PdfGlobeIcon color={c.accent} /></View>
+            <Link src={normalizeExternalUrl(cv.linkedinUrl)} style={[s.contactText, { color: c.accent, textDecoration: "underline" }]}>
+              LinkedIn
+            </Link>
+          </View>
         )}
       </View>
 
@@ -450,7 +457,9 @@ function TimelineDocument({ cv, c }: { cv: CvRenderData; c: CvThemeColors }) {
           {cv.linkedinUrl && (
             <View style={s.contactRow}>
               <View style={s.contactIcon}><PdfGlobeIcon color={c.bannerAccent} /></View>
-              <Text style={s.contactText}>{cv.linkedinUrl}</Text>
+              <Link src={normalizeExternalUrl(cv.linkedinUrl)} style={[s.contactText, { color: c.bannerAccent, textDecoration: "underline" }]}>
+                LinkedIn
+              </Link>
             </View>
           )}
 

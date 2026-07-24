@@ -198,3 +198,9 @@ export function getCvTemplate(id: string): CvTemplate {
 export function isPremiumTemplate(id: string): boolean {
   return id !== DEFAULT_TEMPLATE_ID;
 }
+
+// Profile input has no protocol requirement (e.g. "linkedin.com/in/jan") — both
+// renderers need a real absolute URL for the link to actually navigate anywhere.
+export function normalizeExternalUrl(url: string): string {
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+}
