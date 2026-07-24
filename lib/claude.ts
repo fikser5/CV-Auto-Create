@@ -148,9 +148,28 @@ Zasady:
 - Daty zamieniaj na format YYYY-MM-DD. Jeśli CV podaje tylko miesiąc i rok, ustaw dzień na 01. Jeśli podany jest sam rok, ustaw miesiąc i dzień na 01. Jeśli stanowisko/edukacja trwa nadal ("obecnie", "do teraz", "present", "current"), zostaw endDate jako null.
 - Jeśli jakiejś informacji brak w dokumencie (np. brak numeru telefonu, brak podsumowania zawodowego), zostaw odpowiednie pole puste zamiast czegoś dopisywać.
 - Zachowaj chronologię doświadczenia i edukacji taką, jak w dokumencie.
-- Pole "description" dla doświadczenia to zwięzłe przepisanie realnych obowiązków/osiągnięć podanych przy danym stanowisku — nie parafrazuj kreatywnie, trzymaj się treści dokumentu.`;
+- Pole "description" dla doświadczenia to zwięzłe przepisanie realnych obowiązków/osiągnięć podanych przy danym stanowisku — nie parafrazuj kreatywnie, trzymaj się treści dokumentu.
 
-export async function extractProfileFromCv(userId: string, pdfBase64: string): Promise<ImportedProfile> {
+Unikanie duplikatów:
+- Dostajesz też listę doświadczeń i wykształcenia, które użytkownik ma JUŻ zapisane w profilu (z indeksami). Dla każdego wpisu z CV sprawdź, czy to nie jest ta sama praca/szkoła co coś już zapisane (ta sama firma+stanowisko, albo ta sama szkoła+kierunek — nawet jeśli zapisane nieco inaczej, np. "CloudTech" vs "CloudTech Sp. z o.o.") — jeśli tak, podaj indeks tego wpisu w "matchesExistingIndex", żeby aplikacja go wzbogaciła zamiast duplikować. Jeśli to coś nowego, czego w profilu jeszcze nie ma, zostaw null.`;
+
+export async function extractProfileFromCv(
+  userId: string,
+  pdfBase64: string,
+  existingProfile: {
+    experiences: { companyName: string; position: string }[];
+    education: { schoolName: string; degree: string | null }[];
+  },
+): Promise<ImportedProfile> {
+  const existingExperiencesList =
+    existingProfile.experiences.length > 0
+      ? existingProfile.experiences.map((e, i) => `${i}. ${e.position} — ${e.companyName}`).join("\n")
+      : "(profil nie ma jeszcze żadnego doświadczenia)";
+  const existingEducationList =
+    existingProfile.education.length > 0
+      ? existingProfile.education.map((e, i) => `${i}. ${e.schoolName}${e.degree ? ` — ${e.degree}` : ""}`).join("\n")
+      : "(profil nie ma jeszcze żadnego wykształcenia)";
+
   const message = await client.messages.parse({
     model: "claude-opus-4-8",
     max_tokens: 6000,
@@ -165,7 +184,10 @@ export async function extractProfileFromCv(userId: string, pdfBase64: string): P
         role: "user",
         content: [
           { type: "document", source: { type: "base64", media_type: "application/pdf", data: pdfBase64 } },
-          { type: "text", text: "Wyciągnij dane profilu z tego CV." },
+          {
+            type: "text",
+            text: `Obecne doświadczenia w profilu:\n${existingExperiencesList}\n\nObecne wykształcenie w profilu:\n${existingEducationList}\n\nWyciągnij dane profilu z tego CV.`,
+          },
         ],
       },
     ],

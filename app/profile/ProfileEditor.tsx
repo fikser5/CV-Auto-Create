@@ -263,6 +263,10 @@ export function ProfileEditor({ initialData }: { initialData: InitialData }) {
         skills: Skill[];
         interests: Interest[];
         languages: Language[];
+        updatedExperiences: Experience[];
+        updatedEducation: Education[];
+        updatedLanguages: Language[];
+        skippedCounts: { skills: number; interests: number };
       } = await response.json();
 
       setGeneral((prev) => ({
@@ -272,22 +276,37 @@ export function ProfileEditor({ initialData }: { initialData: InitialData }) {
         phone: prev.phone || data.profile.phone || "",
         linkedinUrl: prev.linkedinUrl || data.profile.linkedinUrl || "",
       }));
-      setExperiences((prev) => [...prev, ...data.experiences]);
-      setEducation((prev) => [...prev, ...data.education]);
+      // Existing entries the import enriched (e.g. a fuller description from
+      // the CV) are replaced in place — appending them too would show the
+      // same job/language twice even though the DB only has one row.
+      setExperiences((prev) => [
+        ...prev.map((e) => data.updatedExperiences.find((u) => u.id === e.id) ?? e),
+        ...data.experiences,
+      ]);
+      setEducation((prev) => [
+        ...prev.map((e) => data.updatedEducation.find((u) => u.id === e.id) ?? e),
+        ...data.education,
+      ]);
       setSkills((prev) => [...prev, ...data.skills]);
       setInterests((prev) => [...prev, ...data.interests]);
-      setLanguages((prev) => [...prev, ...data.languages]);
+      setLanguages((prev) => [
+        ...prev.map((l) => data.updatedLanguages.find((u) => u.id === l.id) ?? l),
+        ...data.languages,
+      ]);
 
       const parts: string[] = [];
-      if (data.experiences.length) parts.push(`${data.experiences.length} doświadczenie`);
-      if (data.education.length) parts.push(`${data.education.length} wykształcenie`);
+      if (data.experiences.length) parts.push(`${data.experiences.length} nowe doświadczenie`);
+      if (data.education.length) parts.push(`${data.education.length} nowe wykształcenie`);
       if (data.skills.length) parts.push(`${data.skills.length} umiejętności`);
       if (data.interests.length) parts.push(`${data.interests.length} zainteresowania`);
       if (data.languages.length) parts.push(`${data.languages.length} języki`);
+      const enrichedCount = data.updatedExperiences.length + data.updatedEducation.length + data.updatedLanguages.length;
+      if (enrichedCount > 0) parts.push(`${enrichedCount} uzupełnione o dane z CV`);
+      const skippedTotal = data.skippedCounts.skills + data.skippedCounts.interests;
       setImportStatus(
         parts.length > 0
-          ? `Zaimportowano: ${parts.join(", ")}. Sprawdź poniżej i popraw, jeśli trzeba.`
-          : "Nie znaleziono w pliku nowych danych do zaimportowania.",
+          ? `Zaimportowano: ${parts.join(", ")}.${skippedTotal > 0 ? ` Pominięto ${skippedTotal} duplikatów.` : ""} Sprawdź poniżej i popraw, jeśli trzeba.`
+          : "Nie znaleziono w pliku nowych danych do zaimportowania — wygląda na to, że profil już je ma.",
       );
     } catch (error) {
       setImportError(error instanceof Error ? error.message : "Błąd importu CV.");

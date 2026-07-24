@@ -10,6 +10,13 @@ export const ImportedProfileSchema = z.object({
   experiences: z
     .array(
       z.object({
+        matchesExistingIndex: z
+          .number()
+          .int()
+          .nullable()
+          .describe(
+            "0-based indeks z listy 'Obecne doświadczenia w profilu' podanej w danych wejściowych, jeśli ten wpis z CV opisuje TĘ SAMĄ pracę (ta sama firma i stanowisko, nawet jeśli nazwy są zapisane nieco inaczej). null, jeśli to praca, której nie ma jeszcze w profilu.",
+          ),
         companyName: z.string(),
         position: z.string(),
         description: z.string().default(""),
@@ -23,6 +30,13 @@ export const ImportedProfileSchema = z.object({
   education: z
     .array(
       z.object({
+        matchesExistingIndex: z
+          .number()
+          .int()
+          .nullable()
+          .describe(
+            "0-based indeks z listy 'Obecne wykształcenie w profilu' podanej w danych wejściowych, jeśli ten wpis z CV opisuje TĘ SAMĄ szkołę/kierunek. null, jeśli tego wpisu nie ma jeszcze w profilu.",
+          ),
         schoolName: z.string(),
         degree: z.string().default(""),
         startDate: z.iso.date(),
